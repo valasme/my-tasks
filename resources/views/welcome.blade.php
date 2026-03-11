@@ -134,7 +134,7 @@
                 <section class="flex flex-col items-center py-20 text-center sm:py-28">
                 <h1 class="text-5xl font-bold tracking-tight text-zinc-900 sm:text-6xl md:text-7xl">MyTasks</h1>
                 <p class="mt-6 max-w-2xl text-lg leading-relaxed text-zinc-500">
-                    Effortless task management for small teams. Manage upcoming tasks, due tasks, and notes — without enterprise complexity.
+                    Effortless task management for small teams. Create, update, and track tasks with priorities and due dates.
                 </p>
                 <div class="mt-10 flex flex-wrap items-center justify-center gap-3">
                     @if (Route::has('login'))
@@ -167,31 +167,11 @@
 
             {{-- Features grid: 3 rows x 2 columns --}}
             <section class="py-12">
-                <p class="mb-8 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Features</p>
-                <div class="grid gap-4 sm:grid-cols-2">
-                    <div class="flex h-40 flex-col justify-center rounded-md border border-zinc-200 bg-white p-8">
-                        <p class="text-sm font-semibold text-zinc-900">Employees</p>
-                        <p class="mt-2 text-sm leading-relaxed text-zinc-500">Directory with contact info, department, job title, and work schedules.</p>
-                    </div>
-                    <div class="flex h-40 flex-col justify-center rounded-md border border-zinc-200 bg-white p-8">
-                        <p class="text-sm font-semibold text-zinc-900">Attendance</p>
-                        <p class="mt-2 text-sm leading-relaxed text-zinc-500">Daily attendance tracking with per-employee records.</p>
-                    </div>
+                <p class="mb-8 text-xs font-semibold uppercase tracking-[0.2em] text-zinc-500">Core Feature</p>
+                <div class="grid gap-4 sm:grid-cols-1">
                     <div class="flex h-40 flex-col justify-center rounded-md border border-zinc-200 bg-white p-8">
                         <p class="text-sm font-semibold text-zinc-900">Tasks</p>
-                        <p class="mt-2 text-sm leading-relaxed text-zinc-500">Task management with status, priority, due dates, and employee assignment.</p>
-                    </div>
-                    <div class="flex h-40 flex-col justify-center rounded-md border border-zinc-200 bg-white p-8">
-                        <p class="text-sm font-semibold text-zinc-900">Critical Tasks</p>
-                        <p class="mt-2 text-sm leading-relaxed text-zinc-500">Highlight urgent open tasks with configurable filter and sort modes.</p>
-                    </div>
-                    <div class="flex h-40 flex-col justify-center rounded-md border border-zinc-200 bg-white p-8">
-                        <p class="text-sm font-semibold text-zinc-900">Notes</p>
-                        <p class="mt-2 text-sm leading-relaxed text-zinc-500">Quick notes system with title, description, and search.</p>
-                    </div>
-                    <div class="flex h-40 flex-col justify-center rounded-md border border-zinc-200 bg-white p-8">
-                        <p class="text-sm font-semibold text-zinc-900">Due Payments</p>
-                        <p class="mt-2 text-sm leading-relaxed text-zinc-500">Track upcoming pay dates with urgency cues and payment status.</p>
+                        <p class="mt-2 text-sm leading-relaxed text-zinc-500">Create, assign, prioritize, and track tasks with due dates and statuses.</p>
                     </div>
                 </div>
             </section>

@@ -36,16 +36,11 @@
 
 ## Overview
 
-MyTasks is a task management application designed for small teams. It provides employee management, attendance tracking, task assignment, critical task highlighting, notes, and due payment tracking — without enterprise complexity.
+MyTasks is a task management application designed for small teams. It focuses on task creation, assignment, prioritization, and due-date tracking — a lightweight task CRUD app.
 
 ## Features
 
-- **Employees** — Directory with contact info, department, job title, and work schedules.
-- **Attendance** — Daily attendance tracking with per-employee records.
-- **Tasks** — Task management with status, priority, due dates, and employee assignment.
-- **Critical Tasks** — Highlight urgent open tasks with configurable filter and sort modes.
-- **Notes** — Quick notes system with title, description, and search.
-- **Due Payments** — Track upcoming pay dates with urgency cues and payment status.
+- **Tasks** — Create, update, and track tasks with status, priority, and due dates.
 - Authentication powered by Laravel Fortify.
 - Responsive UI using Livewire, Flux UI, and Tailwind CSS.
 

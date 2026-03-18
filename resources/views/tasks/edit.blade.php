@@ -1,0 +1,175 @@
+<x-layouts::app :title="__('Edit Task')">
+    <div class="flex w-full flex-col gap-10">
+        {{-- Header --}}
+        <div class="flex flex-col gap-6">
+            <div>
+                <flux:button href="{{ route('tasks.index') }}" variant="ghost" icon="arrow-left" aria-label="{{ __('Back to Tasks') }}">
+                    {{ __('Back to Tasks') }}
+                </flux:button>
+            </div>
+            <div class="flex items-center justify-between">
+                <div>
+                    <flux:heading size="xl">{{ __('Edit Task') }}</flux:heading>
+                    <flux:subheading class="mt-1">{{ __('Update the details for ":title".', ['title' => $task->title]) }}</flux:subheading>
+                </div>
+                <flux:modal.trigger name="delete-task">
+                    <flux:button icon="trash" variant="ghost" size="sm" data-test="delete-task-trigger" aria-label="{{ __('Delete Task') }}">
+                        {{ __('Delete') }}
+                    </flux:button>
+                </flux:modal.trigger>
+            </div>
+        </div>
+
+        <flux:separator />
+
+        {{-- Form --}}
+        <form method="POST" action="{{ route('tasks.update', $task) }}" class="w-full max-w-2xl space-y-8" x-data="{ isRecurring: {{ old('is_recurring_daily', $task->is_recurring_daily) ? 'true' : 'false' }} }">
+            @csrf
+            @method('PUT')
+
+            {{-- Title --}}
+            <flux:input
+                name="title"
+                :label="__('Title')"
+                :placeholder="__('Enter task title...')"
+                :value="old('title', $task->title)"
+                required
+                data-test="task-title-input"
+            />
+
+            {{-- Description --}}
+            <flux:textarea
+                name="description"
+                :label="__('Description')"
+                :placeholder="__('Describe the task (optional)...')"
+                rows="4"
+                data-test="task-description-input"
+            >{{ old('description', $task->description) }}</flux:textarea>
+
+            {{-- Priority --}}
+            <flux:select name="priority" :label="__('Priority')" data-test="task-priority-select">
+                @foreach (\App\Models\Task::PRIORITIES as $priority)
+                    <flux:select.option :value="$priority" :selected="old('priority', $task->priority) === $priority">
+                        {{ ucfirst($priority) }}
+                    </flux:select.option>
+                @endforeach
+            </flux:select>
+
+            {{-- Recurring Daily Toggle --}}
+            <div class="space-y-4">
+                <flux:checkbox
+                    name="is_recurring_daily"
+                    :label="__('Recurring daily task')"
+                    :description="__('Enable to set a daily recurring time instead of a due date.')"
+                    value="1"
+                    x-model="isRecurring"
+                    data-test="task-recurring-checkbox"
+                />
+            </div>
+
+            {{-- Status (hidden when recurring) --}}
+            <div x-show="!isRecurring" >
+                <flux:select name="status" :label="__('Status')" data-test="task-status-select" x-bind:disabled="isRecurring">
+                    @foreach (\App\Models\Task::STATUSES as $status)
+                        <flux:select.option :value="$status" :selected="old('status', $task->status) === $status">
+                            {{ str_replace('_', ' ', ucfirst($status)) }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+            </div>
+
+            {{-- Due Date (hidden when recurring) --}}
+            <div x-show="!isRecurring" >
+                <flux:input
+                    name="due_date"
+                    type="date"
+                    :label="__('Due Date')"
+                    :value="old('due_date', $task->due_date?->format('Y-m-d'))"
+                    x-bind:disabled="isRecurring"
+                    data-test="task-due-date-input"
+                />
+            </div>
+
+            {{-- Recurring Times (shown when recurring) --}}
+            <div x-show="isRecurring">
+                <flux:label>{{ __('Daily Times') }}</flux:label>
+                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Add one or more times this task should recur each day.') }}</p>
+                <div class="mt-3 space-y-2" x-data="{ times: {{ json_encode(old('recurring_times', $task->recurring_times ?? ['09:00'])) }} }">
+                    <template x-for="(time, index) in times" :key="index">
+                        <div class="flex items-center gap-2">
+                            <input
+                                type="time"
+                                x-bind:name="'recurring_times[' + index + ']'"
+                                x-model="times[index]"
+                                class="block w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm shadow-sm focus:border-zinc-400 focus:ring-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+                                data-test="task-recurring-time-input"
+                            />
+                            <button
+                                type="button"
+                                x-show="times.length > 1"
+                                x-on:click="times.splice(index, 1)"
+                                class="inline-flex items-center justify-center rounded-md border border-zinc-200 p-1.5 text-zinc-400 transition hover:border-zinc-300 hover:text-zinc-600 dark:border-zinc-600 dark:text-zinc-500 dark:hover:border-zinc-500 dark:hover:text-zinc-300"
+                                aria-label="{{ __('Remove time') }}"
+                                data-test="remove-time"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" /></svg>
+                            </button>
+                        </div>
+                    </template>
+                    <button
+                        type="button"
+                        x-on:click="times.push('09:00')"
+                        class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                        data-test="add-time"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        {{ __('Add another time') }}
+                    </button>
+                    @error('recurring_times')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                    @error('recurring_times.*')
+                        <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                    @enderror
+                </div>
+            </div>
+
+            {{-- Hidden status for recurring --}}
+            <template x-if="isRecurring">
+                <input type="hidden" name="status" value="pending" />
+            </template>
+
+            {{-- Actions --}}
+            <div class="flex items-center gap-4">
+                <flux:button type="submit" variant="primary" data-test="submit-task">
+                    {{ __('Update Task') }}
+                </flux:button>
+                <flux:button href="{{ route('tasks.show', $task) }}" variant="ghost">
+                    {{ __('Cancel') }}
+                </flux:button>
+            </div>
+        </form>
+    </div>
+
+    {{-- Delete Modal --}}
+    <flux:modal name="delete-task" class="max-w-sm">
+        <div class="space-y-4">
+            <div>
+                <flux:heading size="lg">{{ __('Delete Task') }}</flux:heading>
+                <flux:subheading>{{ __('Are you sure you want to delete ":title"? This action cannot be undone.', ['title' => $task->title]) }}</flux:subheading>
+            </div>
+            <div class="flex justify-end gap-2">
+                <flux:modal.close>
+                    <flux:button variant="ghost" aria-label="{{ __('Cancel Delete') }}">{{ __('Cancel') }}</flux:button>
+                </flux:modal.close>
+                <form method="POST" action="{{ route('tasks.destroy', $task) }}">
+                    @csrf
+                    @method('DELETE')
+                    <flux:button type="submit" variant="danger" data-test="confirm-delete" aria-label="{{ __('Confirm Delete') }}">
+                        {{ __('Delete') }}
+                    </flux:button>
+                </form>
+            </div>
+        </div>
+    </flux:modal>
+</x-layouts::app>

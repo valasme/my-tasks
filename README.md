@@ -54,7 +54,7 @@ MyTasks is a task management application designed for small teams. It focuses on
 
 ## Requirements
 
-- PHP 8.2+ (PHP 8.5 recommended)
+- PHP 8.5 (PHP 8.5 recommended)
 - Composer (latest version recommended)
 - Node.js and npm (Node.js 25 recommended)
 - A Laravel-supported database (SQLite, MySQL, etc. SQLite is

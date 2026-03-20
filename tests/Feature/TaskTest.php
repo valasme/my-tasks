@@ -1068,4 +1068,514 @@ class TaskTest extends TestCase
             $this->assertEquals($label, $task->statusLabel());
         }
     }
+
+    // ---------------------------------------------------------------
+    // Sorting
+    // ---------------------------------------------------------------
+
+    public function test_index_default_sort_is_newest_first(): void
+    {
+        $user = User::factory()->create();
+
+        Task::factory()->for($user)->create(['title' => 'Older Task', 'created_at' => now()->subDay()]);
+        Task::factory()->for($user)->create(['title' => 'Newer Task', 'created_at' => now()]);
+
+        $response = $this->actingAs($user)->get(route('tasks.index'));
+
+        $response->assertOk();
+        $response->assertSeeTextInOrder(['Newer Task', 'Older Task']);
+    }
+
+    public function test_index_sort_title_asc(): void
+    {
+        $user = User::factory()->create();
+
+        Task::factory()->for($user)->create(['title' => 'Zebra Task']);
+        Task::factory()->for($user)->create(['title' => 'Apple Task']);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', ['sort' => 'title_asc']));
+
+        $response->assertOk();
+        $response->assertSeeTextInOrder(['Apple Task', 'Zebra Task']);
+    }
+
+    public function test_index_sort_title_desc(): void
+    {
+        $user = User::factory()->create();
+
+        Task::factory()->for($user)->create(['title' => 'Apple Task']);
+        Task::factory()->for($user)->create(['title' => 'Zebra Task']);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', ['sort' => 'title_desc']));
+
+        $response->assertOk();
+        $response->assertSeeTextInOrder(['Zebra Task', 'Apple Task']);
+    }
+
+    public function test_index_invalid_sort_falls_back_to_default(): void
+    {
+        $user = User::factory()->create();
+
+        Task::factory()->for($user)->create(['title' => 'Older Task', 'created_at' => now()->subDay()]);
+        Task::factory()->for($user)->create(['title' => 'Newer Task', 'created_at' => now()]);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', ['sort' => 'invalid']));
+
+        $response->assertOk();
+        $response->assertSeeTextInOrder(['Newer Task', 'Older Task']);
+    }
+
+    public function test_index_sort_preserved_across_pagination(): void
+    {
+        $user = User::factory()->create();
+        Task::factory()->count(20)->for($user)->create();
+
+        $response = $this->actingAs($user)->get(route('tasks.index', ['sort' => 'title_asc', 'page' => 2]));
+
+        $response->assertOk();
+    }
+
+    public function test_index_sort_dropdown_is_visible(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('tasks.index'));
+
+        $response->assertOk();
+        $response->assertSee('data-test="sort-select"', false);
+    }
+
+    // ---------------------------------------------------------------
+    // Additional Validation Edge Cases
+    // ---------------------------------------------------------------
+
+    public function test_store_rejects_empty_string_title(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('tasks.store'), [
+            'title' => '',
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+        ]);
+
+        $response->assertSessionHasErrors('title');
+    }
+
+    public function test_store_rejects_non_string_title(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('tasks.store'), [
+            'title' => 12345,
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+        ]);
+
+        $response->assertSessionHasErrors('title');
+    }
+
+    public function test_store_rejects_non_string_description(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('tasks.store'), [
+            'title' => 'Test',
+            'description' => ['array', 'not', 'string'],
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+        ]);
+
+        $response->assertSessionHasErrors('description');
+    }
+
+    public function test_update_title_max_length_rejected(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+            'title' => str_repeat('a', 256),
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+        ]);
+
+        $response->assertSessionHasErrors('title');
+    }
+
+    public function test_update_description_max_length_rejected(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+            'title' => 'Test',
+            'description' => str_repeat('a', 5001),
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+        ]);
+
+        $response->assertSessionHasErrors('description');
+    }
+
+    public function test_update_allows_past_due_date(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->overdue()->for($user)->create();
+
+        $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+            'title' => 'Updated overdue task',
+            'status' => 'pending',
+            'priority' => 'high',
+            'due_date' => now()->subDays(3)->format('Y-m-d'),
+        ]);
+
+        $response->assertRedirect(route('tasks.show', $task));
+        $response->assertSessionHasNoErrors();
+    }
+
+    public function test_store_non_recurring_clears_recurring_times(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('tasks.store'), [
+            'title' => 'Non Recurring Task',
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+            'is_recurring_daily' => '0',
+            'recurring_times' => ['09:00'],
+        ]);
+
+        $response->assertRedirect(route('tasks.index'));
+
+        $task = Task::where('title', 'Non Recurring Task')->first();
+        $this->assertNotNull($task);
+        $this->assertNull($task->recurring_times);
+    }
+
+    public function test_update_rejects_empty_string_title(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+            'title' => '',
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+        ]);
+
+        $response->assertSessionHasErrors('title');
+    }
+
+    // ---------------------------------------------------------------
+    // Additional Model Behavior
+    // ---------------------------------------------------------------
+
+    public function test_store_with_completed_status_auto_sets_completed_at(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('tasks.store'), [
+            'title' => 'Completed on create',
+            'status' => 'completed',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+        ]);
+
+        $task = Task::where('title', 'Completed on create')->first();
+        $this->assertNotNull($task);
+        $this->assertNotNull($task->completed_at);
+    }
+
+    public function test_completed_at_not_overwritten_when_already_set(): void
+    {
+        $user = User::factory()->create();
+        $originalCompletedAt = now()->subDay();
+
+        $task = Task::factory()->for($user)->create([
+            'status' => 'completed',
+            'completed_at' => $originalCompletedAt,
+            'due_date' => now()->addDay()->format('Y-m-d'),
+        ]);
+
+        $task->update(['title' => 'Updated title']);
+
+        $this->assertEquals(
+            $originalCompletedAt->startOfSecond()->timestamp,
+            $task->fresh()->completed_at->startOfSecond()->timestamp
+        );
+    }
+
+    public function test_model_casts_recurring_times_to_array(): void
+    {
+        $task = Task::factory()->recurringDaily()->create([
+            'recurring_times' => ['09:00', '14:30'],
+        ]);
+
+        $this->assertIsArray($task->recurring_times);
+        $this->assertCount(2, $task->recurring_times);
+    }
+
+    public function test_model_casts_completed_at_to_datetime(): void
+    {
+        $task = Task::factory()->completed()->create();
+
+        $this->assertInstanceOf(\DateTimeInterface::class, $task->completed_at);
+    }
+
+    // ---------------------------------------------------------------
+    // Additional View Assertions
+    // ---------------------------------------------------------------
+
+    public function test_show_displays_no_description_message(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create(['description' => null]);
+
+        $response = $this->actingAs($user)->get(route('tasks.show', $task));
+
+        $response->assertOk();
+        $response->assertSeeText('No description provided.');
+    }
+
+    public function test_show_displays_no_due_date_message(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create([
+            'due_date' => null,
+            'is_recurring_daily' => false,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('tasks.show', $task));
+
+        $response->assertOk();
+        $response->assertSeeText('No due date set');
+    }
+
+    public function test_show_displays_timestamps(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->get(route('tasks.show', $task));
+
+        $response->assertOk();
+        $response->assertSeeText('Created');
+        $response->assertSeeText('Last Updated');
+    }
+
+    public function test_edit_form_shows_current_values(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create([
+            'title' => 'My Editable Task',
+            'description' => 'Some description text',
+            'priority' => 'high',
+        ]);
+
+        $response = $this->actingAs($user)->get(route('tasks.edit', $task));
+
+        $response->assertOk();
+        $response->assertSee('My Editable Task');
+        $response->assertSee('Some description text');
+    }
+
+    public function test_index_error_message_displayed(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)
+            ->withSession(['error' => 'Something went wrong.'])
+            ->get(route('tasks.index'));
+
+        $response->assertOk();
+        $response->assertSeeText('Something went wrong.');
+    }
+
+    // ---------------------------------------------------------------
+    // Additional Security Tests
+    // ---------------------------------------------------------------
+
+    public function test_user_cannot_set_user_id_via_update(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $task = Task::factory()->for($user)->create();
+
+        $this->actingAs($user)->put(route('tasks.update', $task), [
+            'title' => 'Sneaky Update',
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+            'user_id' => $otherUser->id,
+        ]);
+
+        $this->assertEquals($user->id, $task->fresh()->user_id);
+    }
+
+    public function test_store_title_with_html_is_escaped_on_index(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('tasks.store'), [
+            'title' => '<script>alert("xss")</script>',
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('tasks.index'));
+
+        $response->assertOk();
+        $response->assertDontSee('<script>alert("xss")</script>', false);
+        $response->assertSee('&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;', false);
+    }
+
+    public function test_store_description_with_html_is_escaped_on_show(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->post(route('tasks.store'), [
+            'title' => 'XSS Test',
+            'description' => '<img src=x onerror=alert(1)>',
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+        ]);
+
+        $task = Task::where('title', 'XSS Test')->first();
+        $response = $this->actingAs($user)->get(route('tasks.show', $task));
+
+        $response->assertOk();
+        $response->assertDontSee('<img src=x onerror=alert(1)>', false);
+    }
+
+    // ---------------------------------------------------------------
+    // Additional Update Edge Cases
+    // ---------------------------------------------------------------
+
+    public function test_update_due_date_required_for_non_recurring(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+            'title' => 'Test',
+            'status' => 'pending',
+            'priority' => 'low',
+        ]);
+
+        $response->assertSessionHasErrors('due_date');
+    }
+
+    public function test_update_recurring_task_with_invalid_time_format_fails(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+            'title' => 'Test',
+            'priority' => 'low',
+            'is_recurring_daily' => '1',
+            'recurring_times' => ['not-a-time'],
+        ]);
+
+        $response->assertSessionHasErrors('recurring_times.0');
+    }
+
+    public function test_update_recurring_task_rejects_duplicate_times(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+            'title' => 'Test',
+            'priority' => 'low',
+            'is_recurring_daily' => '1',
+            'recurring_times' => ['09:00', '09:00'],
+        ]);
+
+        $response->assertSessionHasErrors('recurring_times.1');
+    }
+
+    public function test_update_recurring_task_with_multiple_times(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+            'title' => 'Multi-time recurring',
+            'priority' => 'medium',
+            'is_recurring_daily' => '1',
+            'recurring_times' => ['08:00', '12:00', '17:00'],
+        ]);
+
+        $response->assertRedirect(route('tasks.show', $task));
+        $response->assertSessionHasNoErrors();
+
+        $task->refresh();
+        $this->assertEquals(['08:00', '12:00', '17:00'], $task->recurring_times);
+    }
+
+    public function test_update_accepts_all_valid_statuses(): void
+    {
+        $user = User::factory()->create();
+
+        foreach (Task::STATUSES as $status) {
+            $task = Task::factory()->for($user)->create();
+
+            $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+                'title' => "Updated to {$status}",
+                'status' => $status,
+                'priority' => 'low',
+                'due_date' => now()->addDay()->format('Y-m-d'),
+            ]);
+
+            $response->assertSessionHasNoErrors();
+        }
+    }
+
+    public function test_update_accepts_all_valid_priorities(): void
+    {
+        $user = User::factory()->create();
+
+        foreach (Task::PRIORITIES as $priority) {
+            $task = Task::factory()->for($user)->create();
+
+            $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+                'title' => "Updated to {$priority}",
+                'status' => 'pending',
+                'priority' => $priority,
+                'due_date' => now()->addDay()->format('Y-m-d'),
+            ]);
+
+            $response->assertSessionHasNoErrors();
+        }
+    }
+
+    // ---------------------------------------------------------------
+    // Additional Priority Label Coverage
+    // ---------------------------------------------------------------
+
+    public function test_all_priority_labels_are_defined(): void
+    {
+        $expectedLabels = [
+            'low' => 'Low',
+            'medium' => 'Medium',
+            'high' => 'High',
+            'urgent' => 'Urgent',
+        ];
+
+        foreach ($expectedLabels as $priority => $label) {
+            $task = Task::factory()->create(['priority' => $priority]);
+            $this->assertEquals($label, $task->priorityLabel());
+        }
+    }
 }

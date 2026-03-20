@@ -21,11 +21,13 @@ return new class extends Migration
             $table->date('due_date')->nullable();
             $table->boolean('is_recurring_daily')->default(false);
             $table->json('recurring_times')->nullable();
+            $table->timestamp('completed_at')->nullable();
             $table->timestamps();
 
             $table->index(['user_id', 'status']);
             $table->index(['user_id', 'priority']);
             $table->index(['user_id', 'due_date']);
+            $table->index(['user_id', 'title']);
         });
     }
 

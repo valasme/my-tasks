@@ -3,7 +3,7 @@
         {{-- Header --}}
         <div class="flex flex-col gap-6">
             <div>
-                <flux:button href="{{ route('tasks.index') }}" variant="ghost" icon="arrow-left" aria-label="{{ __('Back to Tasks') }}">
+                <flux:button class="cursor-pointer" href="{{ route('tasks.index') }}" variant="ghost" icon="arrow-left" aria-label="{{ __('Back to Tasks') }}">
                     {{ __('Back to Tasks') }}
                 </flux:button>
             </div>
@@ -13,7 +13,7 @@
                     <flux:subheading class="mt-1">{{ __('Update the details for ":title".', ['title' => $task->title]) }}</flux:subheading>
                 </div>
                 <flux:modal.trigger name="delete-task">
-                    <flux:button icon="trash" variant="ghost" size="sm" data-test="delete-task-trigger" aria-label="{{ __('Delete Task') }}">
+                    <flux:button class="cursor-pointer" icon="trash" variant="ghost" size="sm" data-test="delete-task-trigger" aria-label="{{ __('Delete Task') }}">
                         {{ __('Delete') }}
                     </flux:button>
                 </flux:modal.trigger>
@@ -108,21 +108,21 @@
                                 type="button"
                                 x-show="times.length > 1"
                                 x-on:click="times.splice(index, 1)"
-                                class="inline-flex items-center justify-center rounded-md border border-zinc-200 p-1.5 text-zinc-400 transition hover:border-zinc-300 hover:text-zinc-600 dark:border-zinc-600 dark:text-zinc-500 dark:hover:border-zinc-500 dark:hover:text-zinc-300"
+                                class="cursor-pointer inline-flex items-center justify-center rounded-md border border-zinc-200 p-1.5 text-zinc-400 transition hover:border-zinc-300 hover:text-zinc-600 dark:border-zinc-600 dark:text-zinc-500 dark:hover:border-zinc-500 dark:hover:text-zinc-300"
                                 aria-label="{{ __('Remove time') }}"
                                 data-test="remove-time"
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" /></svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14" /></svg>
                             </button>
                         </div>
                     </template>
                     <button
                         type="button"
                         x-on:click="times.push('09:00')"
-                        class="inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                        class="cursor-pointer inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                         data-test="add-time"
                     >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" class="size-3.5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
                         {{ __('Add another time') }}
                     </button>
                     @error('recurring_times')
@@ -141,10 +141,10 @@
 
             {{-- Actions --}}
             <div class="flex items-center gap-4">
-                <flux:button type="submit" variant="primary" data-test="submit-task">
+                <flux:button class="cursor-pointer" type="submit" variant="primary" data-test="submit-task">
                     {{ __('Update Task') }}
                 </flux:button>
-                <flux:button href="{{ route('tasks.show', $task) }}" variant="ghost">
+                <flux:button class="cursor-pointer" href="{{ route('tasks.show', $task) }}" variant="ghost">
                     {{ __('Cancel') }}
                 </flux:button>
             </div>
@@ -160,12 +160,12 @@
             </div>
             <div class="flex justify-end gap-2">
                 <flux:modal.close>
-                    <flux:button variant="ghost" aria-label="{{ __('Cancel Delete') }}">{{ __('Cancel') }}</flux:button>
+                    <flux:button class="cursor-pointer" variant="ghost" aria-label="{{ __('Cancel Delete') }}">{{ __('Cancel') }}</flux:button>
                 </flux:modal.close>
                 <form method="POST" action="{{ route('tasks.destroy', $task) }}">
                     @csrf
                     @method('DELETE')
-                    <flux:button type="submit" variant="danger" data-test="confirm-delete" aria-label="{{ __('Confirm Delete') }}">
+                    <flux:button class="cursor-pointer" type="submit" variant="danger" data-test="confirm-delete" aria-label="{{ __('Confirm Delete') }}">
                         {{ __('Delete') }}
                     </flux:button>
                 </form>

@@ -18,6 +18,9 @@
                     <flux:sidebar.item icon="clipboard-document-list" :href="route('tasks.index')" :current="request()->routeIs('tasks.*')" wire:navigate>
                         {{ __('Tasks') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="calendar-days" :href="route('due-tasks.index')" :current="request()->routeIs('due-tasks.*')" wire:navigate>
+                        {{ __('Due Tasks') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

@@ -7,6 +7,7 @@ use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -22,19 +23,33 @@ class TaskController extends Controller
     use AuthorizesRequests;
 
     /**
+     * The allowed sort options for task listing.
+     */
+    private const array ALLOWED_SORTS = ['title_asc', 'title_desc'];
+
+    /**
      * Display a paginated listing of the authenticated user's tasks.
      */
-    public function index(): View
+    public function index(Request $request): View
     {
         $this->authorize('viewAny', Task::class);
 
-        $tasks = Auth::user()
-            ->tasks()
-            ->select(['id', 'title', 'status', 'priority', 'due_date', 'is_recurring_daily', 'recurring_times'])
-            ->latest()
-            ->paginate(15);
+        $sort = $request->query('sort');
+        $sort = in_array($sort, self::ALLOWED_SORTS, true) ? $sort : null;
 
-        return view('tasks.index', compact('tasks'));
+        $query = Auth::user()
+            ->tasks()
+            ->select(['id', 'title', 'status', 'priority', 'due_date', 'is_recurring_daily', 'recurring_times', 'completed_at']);
+
+        $query = match ($sort) {
+            'title_asc' => $query->orderBy('title'),
+            'title_desc' => $query->orderByDesc('title'),
+            default => $query->latest(),
+        };
+
+        $tasks = $query->paginate(15)->withQueryString();
+
+        return view('tasks.index', compact('tasks', 'sort'));
     }
 
     /**

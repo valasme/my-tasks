@@ -36,12 +36,25 @@ class TaskFactory extends Factory
     }
 
     /**
-     * Indicate the task is completed.
+     * Indicate the task is completed (on time — due date in the future).
      */
     public function completed(): static
     {
         return $this->state(fn (array $attributes): array => [
             'status' => 'completed',
+            'completed_at' => now(),
+        ]);
+    }
+
+    /**
+     * Indicate the task was completed late (after the due date passed).
+     */
+    public function completedLate(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'status' => 'completed',
+            'due_date' => fake()->dateTimeBetween('-30 days', '-2 days')->format('Y-m-d'),
+            'completed_at' => now(),
         ]);
     }
 

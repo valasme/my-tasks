@@ -3,21 +3,21 @@
         {{-- Header --}}
         <div class="flex flex-col gap-6">
             <div>
-                <flux:button href="{{ route('tasks.index') }}" variant="ghost" icon="arrow-left" aria-label="{{ __('Back to Tasks') }}">
+                <flux:button class="cursor-pointer" href="{{ route('tasks.index') }}" variant="ghost" icon="arrow-left" aria-label="{{ __('Back to Tasks') }}">
                     {{ __('Back to Tasks') }}
                 </flux:button>
             </div>
-            <div class="flex items-center justify-between">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                     <flux:heading size="xl">{{ $task->title }}</flux:heading>
                     <flux:subheading>{{ __('Task details') }}</flux:subheading>
                 </div>
                 <div class="flex items-center gap-2">
-                    <flux:button href="{{ route('tasks.edit', $task) }}" icon="pencil" variant="primary" size="sm" data-test="edit-task" aria-label="{{ __('Edit Task') }}">
+                    <flux:button class="cursor-pointer" href="{{ route('tasks.edit', $task) }}" icon="pencil" variant="primary" size="sm" data-test="edit-task" aria-label="{{ __('Edit Task') }}">
                         {{ __('Edit') }}
                     </flux:button>
                     <flux:modal.trigger name="delete-task">
-                        <flux:button icon="trash" variant="ghost" size="sm" data-test="delete-task-trigger" aria-label="{{ __('Delete Task') }}">
+                        <flux:button class="cursor-pointer" icon="trash" variant="ghost" size="sm" data-test="delete-task-trigger" aria-label="{{ __('Delete Task') }}">
                             {{ __('Delete') }}
                         </flux:button>
                     </flux:modal.trigger>
@@ -123,12 +123,12 @@
             </div>
             <div class="flex justify-end gap-2">
                 <flux:modal.close>
-                    <flux:button variant="ghost" aria-label="{{ __('Cancel Delete') }}">{{ __('Cancel') }}</flux:button>
+                    <flux:button class="cursor-pointer" variant="ghost" aria-label="{{ __('Cancel Delete') }}">{{ __('Cancel') }}</flux:button>
                 </flux:modal.close>
                 <form method="POST" action="{{ route('tasks.destroy', $task) }}">
                     @csrf
                     @method('DELETE')
-                    <flux:button type="submit" variant="danger" data-test="confirm-delete" aria-label="{{ __('Confirm Delete') }}">
+                    <flux:button class="cursor-pointer" type="submit" variant="danger" data-test="confirm-delete" aria-label="{{ __('Confirm Delete') }}">
                         {{ __('Delete') }}
                     </flux:button>
                 </form>

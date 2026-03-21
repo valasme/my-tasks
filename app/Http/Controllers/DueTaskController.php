@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Task;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
 /**
@@ -33,7 +32,7 @@ class DueTaskController extends Controller
         $sort = $request->query('sort');
         $sort = in_array($sort, self::ALLOWED_SORTS, true) ? $sort : null;
 
-        $baseQuery = Auth::user()
+        $baseQuery = $request->user()
             ->tasks()
             ->where('is_recurring_daily', false)
             ->select(['id', 'title', 'status', 'priority', 'due_date', 'completed_at']);

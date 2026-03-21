@@ -42,6 +42,7 @@ class TaskFactory extends Factory
     {
         return $this->state(fn (array $attributes): array => [
             'status' => 'completed',
+            'due_date' => fake()->dateTimeBetween('+1 day', '+30 days')->format('Y-m-d'),
             'completed_at' => now(),
         ]);
     }
@@ -51,11 +52,18 @@ class TaskFactory extends Factory
      */
     public function completedLate(): static
     {
-        return $this->state(fn (array $attributes): array => [
-            'status' => 'completed',
-            'due_date' => fake()->dateTimeBetween('-30 days', '-2 days')->format('Y-m-d'),
-            'completed_at' => now(),
-        ]);
+        return $this->state(function (array $attributes): array {
+            $dueDate = fake()->dateTimeBetween('-30 days', '-3 days');
+
+            return [
+                'status' => 'completed',
+                'due_date' => $dueDate->format('Y-m-d'),
+                'completed_at' => fake()->dateTimeBetween(
+                    (clone $dueDate)->modify('+1 day'),
+                    'now',
+                ),
+            ];
+        });
     }
 
     /**
@@ -85,12 +93,17 @@ class TaskFactory extends Factory
      */
     public function recurringDaily(): static
     {
-        return $this->state(fn (array $attributes): array => [
-            'is_recurring_daily' => true,
-            'recurring_times' => [fake()->time('H:i'), fake()->time('H:i')],
-            'due_date' => null,
-            'status' => 'pending',
-        ]);
+        return $this->state(function (array $attributes): array {
+            $first = sprintf('%02d:%02d', fake()->numberBetween(6, 11), fake()->numberBetween(0, 59));
+            $second = sprintf('%02d:%02d', fake()->numberBetween(12, 22), fake()->numberBetween(0, 59));
+
+            return [
+                'is_recurring_daily' => true,
+                'recurring_times' => [$first, $second],
+                'due_date' => null,
+                'status' => 'pending',
+            ];
+        });
     }
 
     /**

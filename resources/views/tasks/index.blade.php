@@ -92,7 +92,7 @@
                             </flux:table.cell>
 
                             <flux:table.cell class="hidden lg:table-cell">
-                                @if ($task->is_recurring_daily)
+                                @if ($task->is_recurring_daily && $task->recurring_times)
                                     @php
                                         $formatted = collect($task->recurring_times)->sort()->values();
                                         $visible = $formatted->take(3);

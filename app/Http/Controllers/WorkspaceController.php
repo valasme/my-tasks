@@ -5,11 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreWorkspaceRequest;
 use App\Http\Requests\UpdateWorkspaceRequest;
 use App\Models\Workspace;
-use App\Policies\WorkspacePolicy;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -38,7 +36,7 @@ class WorkspaceController extends Controller
         $sort = $request->query('sort');
         $sort = in_array($sort, self::ALLOWED_SORTS, true) ? $sort : null;
 
-        $query = Auth::user()
+        $query = $request->user()
             ->workspaces()
             ->withCount('tasks');
 

@@ -2,8 +2,6 @@
 
 namespace App\Concerns;
 
-use App\Http\Requests\StoreTaskRequest;
-use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
@@ -55,7 +53,6 @@ trait TaskValidationRules
             'is_recurring_daily' => ['boolean'],
             'recurring_times' => [
                 $this->boolean('is_recurring_daily') ? 'required' : 'nullable',
-                'nullable',
                 'array',
                 'min:1',
             ],
@@ -66,6 +63,7 @@ trait TaskValidationRules
             ],
             'workspace_id' => [
                 'nullable',
+                'integer',
                 Rule::exists('workspaces', 'id')->where('user_id', $this->user()->id),
             ],
         ];
@@ -83,7 +81,6 @@ trait TaskValidationRules
     {
         return [
             $this->boolean('is_recurring_daily') ? 'nullable' : 'required',
-            'nullable',
             'date',
         ];
     }

@@ -183,12 +183,14 @@ class Task extends Model
      */
     public function scheduleStatusLabel(): string
     {
-        return match ($this->scheduleStatus()) {
+        $status = $this->scheduleStatus();
+
+        return match ($status) {
             'pending' => 'Pending',
             'missed' => 'Missed',
             'completed_on_time' => 'On Time',
             'completed_late' => 'Completed Late',
-            default => ucfirst($this->scheduleStatus()),
+            default => ucfirst($status),
         };
     }
 
@@ -197,7 +199,9 @@ class Task extends Model
      */
     public function scheduleStatusBadgeClasses(): string
     {
-        return match ($this->scheduleStatus()) {
+        $status = $this->scheduleStatus();
+
+        return match ($status) {
             'pending' => 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
             'missed' => 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
             'completed_on_time' => 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',

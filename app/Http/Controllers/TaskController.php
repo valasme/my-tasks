@@ -5,11 +5,9 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
-use App\Policies\TaskPolicy;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -38,9 +36,10 @@ class TaskController extends Controller
         $sort = $request->query('sort');
         $sort = in_array($sort, self::ALLOWED_SORTS, true) ? $sort : null;
 
-        $query = Auth::user()
+        $query = $request->user()
             ->tasks()
-            ->select(['id', 'title', 'status', 'priority', 'due_date', 'is_recurring_daily', 'recurring_times', 'completed_at']);
+            ->with('workspace:id,name')
+            ->select(['id', 'workspace_id', 'title', 'status', 'priority', 'due_date', 'is_recurring_daily', 'recurring_times', 'completed_at']);
 
         $query = match ($sort) {
             'title_asc' => $query->orderBy('title'),
@@ -56,11 +55,11 @@ class TaskController extends Controller
     /**
      * Show the form for creating a new task.
      */
-    public function create(): View
+    public function create(Request $request): View
     {
         $this->authorize('create', Task::class);
 
-        $workspaces = Auth::user()->workspaces()->orderBy('name')->get(['id', 'name']);
+        $workspaces = $request->user()->workspaces()->orderBy('name')->get(['id', 'name']);
 
         return view('tasks.create', compact('workspaces'));
     }
@@ -97,6 +96,8 @@ class TaskController extends Controller
     {
         $this->authorize('view', $task);
 
+        $task->loadMissing('workspace:id,name');
+
         return view('tasks.show', compact('task'));
     }
 
@@ -105,11 +106,11 @@ class TaskController extends Controller
      *
      * @param  Task  $task  The task instance resolved via route-model binding.
      */
-    public function edit(Task $task): View
+    public function edit(Request $request, Task $task): View
     {
         $this->authorize('update', $task);
 
-        $workspaces = Auth::user()->workspaces()->orderBy('name')->get(['id', 'name']);
+        $workspaces = $request->user()->workspaces()->orderBy('name')->get(['id', 'name']);
 
         return view('tasks.edit', compact('task', 'workspaces'));
     }

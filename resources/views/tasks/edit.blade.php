@@ -106,7 +106,7 @@
             <div x-show="isRecurring">
                 <flux:label>{{ __('Daily Times') }}</flux:label>
                 <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Add one or more times this task should recur each day.') }}</p>
-                <div class="mt-3 space-y-2" x-data="{ times: {{ json_encode(old('recurring_times', $task->recurring_times ?? ['09:00'])) }} }">
+                <div class="mt-3 space-y-2" x-data="{ times: {{ Js::from(old('recurring_times', $task->recurring_times ?? ['09:00'])) }} }">
                     <template x-for="(time, index) in times" :key="index">
                         <div class="flex items-center gap-2">
                             <input

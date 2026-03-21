@@ -67,7 +67,7 @@
             {{-- Schedule --}}
             <div>
                 <flux:subheading class="mb-2">{{ __('Schedule') }}</flux:subheading>
-                @if ($task->is_recurring_daily)
+                @if ($task->is_recurring_daily && $task->recurring_times)
                     <div class="flex flex-wrap gap-2" data-test="task-schedule">
                         @foreach (collect($task->recurring_times)->sort()->values() as $time)
                             <span class="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-sm text-zinc-700 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">

@@ -2,8 +2,6 @@
 
 namespace App\Concerns;
 
-use App\Http\Requests\StoreWorkspaceRequest;
-use App\Http\Requests\UpdateWorkspaceRequest;
 use Illuminate\Contracts\Validation\ValidationRule;
 
 /**

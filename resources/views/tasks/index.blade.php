@@ -61,7 +61,7 @@
                     <flux:table.column class="hidden md:table-cell">{{ __('Priority') }}</flux:table.column>
                     <flux:table.column class="hidden sm:table-cell">{{ __('Status') }}</flux:table.column>
                     <flux:table.column class="hidden lg:table-cell">{{ __('Schedule') }}</flux:table.column>
-                    <flux:table.column class="text-right">{{ __('Actions') }}</flux:table.column>
+                    <flux:table.column align="end">{{ __('Actions') }}</flux:table.column>
                 </flux:table.columns>
 
                 <flux:table.rows>
@@ -110,7 +110,7 @@
                                 @endif
                             </flux:table.cell>
 
-                            <flux:table.cell class="text-right">
+                            <flux:table.cell align="end">
                                 <div class="flex items-center justify-end gap-2">
                                     <flux:button class="cursor-pointer" href="{{ route('tasks.edit', $task) }}" size="sm" variant="ghost" icon="pencil" data-test="edit-task" aria-label="{{ __('Edit Task: :title', ['title' => $task->title]) }}">
                                         {{ __('Edit') }}
@@ -123,31 +123,33 @@
                                 </div>
                             </flux:table.cell>
                         </flux:table.row>
-
-                        {{-- Delete Modal --}}
-                        <flux:modal :name="'delete-task-' . $task->id" class="max-w-sm">
-                            <div class="space-y-4">
-                                <div>
-                                    <flux:heading size="lg">{{ __('Delete Task') }}</flux:heading>
-                                    <flux:subheading>{{ __('Are you sure you want to delete ":title"? This action cannot be undone.', ['title' => $task->title]) }}</flux:subheading>
-                                </div>
-                                <div class="flex justify-end gap-2">
-                                    <flux:modal.close>
-                                        <flux:button class="cursor-pointer" variant="ghost" aria-label="{{ __('Cancel Delete') }}">{{ __('Cancel') }}</flux:button>
-                                    </flux:modal.close>
-                                    <form method="POST" action="{{ route('tasks.destroy', $task) }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <flux:button class="cursor-pointer" type="submit" variant="danger" data-test="confirm-delete" aria-label="{{ __('Confirm Delete') }}">
-                                            {{ __('Delete') }}
-                                        </flux:button>
-                                    </form>
-                                </div>
-                            </div>
-                        </flux:modal>
                     @endforeach
                 </flux:table.rows>
             </flux:table>
+
+            {{-- Delete Modals --}}
+            @foreach ($tasks as $task)
+                <flux:modal :name="'delete-task-' . $task->id" class="max-w-sm">
+                    <div class="space-y-4">
+                        <div>
+                            <flux:heading size="lg">{{ __('Delete Task') }}</flux:heading>
+                            <flux:subheading>{{ __('Are you sure you want to delete ":title"? This action cannot be undone.', ['title' => $task->title]) }}</flux:subheading>
+                        </div>
+                        <div class="flex justify-end gap-2">
+                            <flux:modal.close>
+                                <flux:button class="cursor-pointer" variant="ghost" aria-label="{{ __('Cancel Delete') }}">{{ __('Cancel') }}</flux:button>
+                            </flux:modal.close>
+                            <form method="POST" action="{{ route('tasks.destroy', $task) }}">
+                                @csrf
+                                @method('DELETE')
+                                <flux:button class="cursor-pointer" type="submit" variant="danger" data-test="confirm-delete" aria-label="{{ __('Confirm Delete') }}">
+                                    {{ __('Delete') }}
+                                </flux:button>
+                            </form>
+                        </div>
+                    </div>
+                </flux:modal>
+            @endforeach
 
             {{-- Pagination --}}
             <div class="mt-6" data-test="pagination">

@@ -55,6 +55,18 @@
                 @endforeach
             </flux:select>
 
+            {{-- Workspace --}}
+            <flux:select name="workspace_id" :label="__('Workspace')" data-test="task-workspace-select">
+                <flux:select.option value="" :selected="!old('workspace_id', $task->workspace_id)">
+                    {{ __('None') }}
+                </flux:select.option>
+                @foreach ($workspaces as $workspace)
+                    <flux:select.option :value="$workspace->id" :selected="old('workspace_id', $task->workspace_id) == $workspace->id">
+                        {{ $workspace->name }}
+                    </flux:select.option>
+                @endforeach
+            </flux:select>
+
             {{-- Recurring Daily Toggle --}}
             <div class="space-y-4">
                 <flux:checkbox

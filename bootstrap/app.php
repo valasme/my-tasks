@@ -20,15 +20,23 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->renderable(function (NotFoundHttpException $e, Request $request) {
             if ($e->getPrevious() instanceof ModelNotFoundException) {
+                $fallbackRoute = str_contains($request->path(), 'workspace')
+                    ? 'workspaces.index'
+                    : 'tasks.index';
+
                 return redirect()
-                    ->route('tasks.index')
+                    ->route($fallbackRoute)
                     ->with('error', 'The requested resource could not be found.');
             }
         });
 
         $exceptions->renderable(function (AuthorizationException $e, Request $request) {
+            $fallbackRoute = str_contains($request->path(), 'workspace')
+                ? 'workspaces.index'
+                : 'tasks.index';
+
             return redirect()
-                ->route('tasks.index')
+                ->route($fallbackRoute)
                 ->with('error', 'You are not authorized to perform this action.');
         });
     })->create();

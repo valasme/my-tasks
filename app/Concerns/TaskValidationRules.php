@@ -2,14 +2,17 @@
 
 namespace App\Concerns;
 
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
 /**
  * Shared validation rules, preparation logic, and custom messages for task form requests.
  *
- * Used by both {@see \App\Http\Requests\StoreTaskRequest} and
- * {@see \App\Http\Requests\UpdateTaskRequest} to keep validation DRY.
+ * Used by both {@see StoreTaskRequest} and
+ * {@see UpdateTaskRequest} to keep validation DRY.
  */
 trait TaskValidationRules
 {
@@ -39,7 +42,7 @@ trait TaskValidationRules
      * Subclasses may override {@see dueDateRules()} to customise due-date
      * constraints (e.g. requiring future dates on creation only).
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     protected function taskRules(): array
     {
@@ -60,6 +63,10 @@ trait TaskValidationRules
                 'required',
                 'date_format:H:i',
                 'distinct',
+            ],
+            'workspace_id' => [
+                'nullable',
+                Rule::exists('workspaces', 'id')->where('user_id', $this->user()->id),
             ],
         ];
     }

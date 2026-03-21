@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
+use App\Policies\TaskPolicy;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,7 +16,7 @@ use Illuminate\View\View;
 /**
  * Handles CRUD operations for authenticated users' tasks.
  *
- * Every action is guarded by {@see \App\Policies\TaskPolicy} to ensure
+ * Every action is guarded by {@see TaskPolicy} to ensure
  * users can only interact with their own tasks.
  */
 class TaskController extends Controller
@@ -59,7 +60,9 @@ class TaskController extends Controller
     {
         $this->authorize('create', Task::class);
 
-        return view('tasks.create');
+        $workspaces = Auth::user()->workspaces()->orderBy('name')->get(['id', 'name']);
+
+        return view('tasks.create', compact('workspaces'));
     }
 
     /**
@@ -106,14 +109,16 @@ class TaskController extends Controller
     {
         $this->authorize('update', $task);
 
-        return view('tasks.edit', compact('task'));
+        $workspaces = Auth::user()->workspaces()->orderBy('name')->get(['id', 'name']);
+
+        return view('tasks.edit', compact('task', 'workspaces'));
     }
 
     /**
      * Update the specified task in storage.
      *
      * @param  UpdateTaskRequest  $request  The validated request containing the updated task data.
-     * @param  Task               $task     The task instance resolved via route-model binding.
+     * @param  Task  $task  The task instance resolved via route-model binding.
      */
     public function update(UpdateTaskRequest $request, Task $task): RedirectResponse
     {

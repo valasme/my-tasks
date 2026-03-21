@@ -24,9 +24,11 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $completed_at
  * @property Carbon $created_at
  * @property Carbon $updated_at
+ * @property int|null $workspace_id
  * @property-read User                  $user
+ * @property-read Workspace|null         $workspace
  */
-#[Fillable(['title', 'description', 'status', 'priority', 'due_date', 'is_recurring_daily', 'recurring_times', 'completed_at'])]
+#[Fillable(['title', 'description', 'status', 'priority', 'due_date', 'is_recurring_daily', 'recurring_times', 'completed_at', 'workspace_id'])]
 class Task extends Model
 {
     /** @use HasFactory<TaskFactory> */
@@ -87,6 +89,14 @@ class Task extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Get the workspace this task belongs to.
+     */
+    public function workspace(): BelongsTo
+    {
+        return $this->belongsTo(Workspace::class);
     }
 
     /**

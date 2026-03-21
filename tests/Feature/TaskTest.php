@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Task;
 use App\Models\User;
+use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -852,7 +853,7 @@ class TaskTest extends TestCase
             'due_date' => '2026-04-15',
         ]);
 
-        $this->assertInstanceOf(\Carbon\CarbonImmutable::class, $task->due_date);
+        $this->assertInstanceOf(CarbonImmutable::class, $task->due_date);
     }
 
     public function test_task_casts_is_recurring_daily_to_boolean(): void

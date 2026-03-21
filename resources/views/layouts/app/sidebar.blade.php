@@ -21,6 +21,9 @@
                     <flux:sidebar.item icon="calendar-days" :href="route('due-tasks.index')" :current="request()->routeIs('due-tasks.*')" wire:navigate>
                         {{ __('Due Tasks') }}
                     </flux:sidebar.item>
+                    <flux:sidebar.item icon="rectangle-group" :href="route('workspaces.index')" :current="request()->routeIs('workspaces.*')" wire:navigate>
+                        {{ __('Workspaces') }}
+                    </flux:sidebar.item>
                 </flux:sidebar.group>
             </flux:sidebar.nav>
 

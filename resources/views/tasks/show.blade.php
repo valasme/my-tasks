@@ -100,6 +100,18 @@
                 @endif
             </div>
 
+            {{-- Workspace --}}
+            <div>
+                <flux:subheading class="mb-2">{{ __('Workspace') }}</flux:subheading>
+                @if ($task->workspace)
+                    <a href="{{ route('workspaces.show', $task->workspace) }}" class="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-zinc-50 px-2.5 py-1 text-sm text-zinc-700 hover:underline dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-300" data-test="task-workspace">
+                        {{ $task->workspace->name }}
+                    </a>
+                @else
+                    <p class="text-sm text-zinc-400 dark:text-zinc-500" data-test="task-workspace">{{ __('None') }}</p>
+                @endif
+            </div>
+
             {{-- Timestamps --}}
             <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
                 <div>

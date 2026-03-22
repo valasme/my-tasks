@@ -74,6 +74,14 @@ class TaskController extends Controller
         try {
             $request->user()->tasks()->create($request->validated());
 
+            // If converting from someday/maybe, delete the original item
+            if ($fromSomeday = $request->query('from_someday')) {
+                $request->user()->tasks()
+                    ->where('id', $fromSomeday)
+                    ->where('category', 'someday_maybe')
+                    ->delete();
+            }
+
             return redirect()
                 ->route('tasks.index')
                 ->with('success', 'Task created successfully.');

@@ -39,6 +39,7 @@ class TaskSeeder extends Seeder
             Task::factory()->count(2)->urgent()->for($user)->create();
             Task::factory()->count(2)->recurringDaily()->for($user)->create();
             Task::factory()->count(2)->overdue()->for($user)->create();
+            Task::factory()->count(3)->somedayMaybe()->for($user)->create();
         }
     }
 }

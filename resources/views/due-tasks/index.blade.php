@@ -18,10 +18,10 @@
                             {{ __('Due Date') }}
                         </flux:select.option>
                         <flux:select.option value="{{ route('due-tasks.index', ['sort' => 'title_asc']) }}" :selected="$sort === 'title_asc'">
-                            {{ __('Title A–Z') }}
+                            {{ __('Title A-Z') }}
                         </flux:select.option>
                         <flux:select.option value="{{ route('due-tasks.index', ['sort' => 'title_desc']) }}" :selected="$sort === 'title_desc'">
-                            {{ __('Title Z–A') }}
+                            {{ __('Title Z-A') }}
                         </flux:select.option>
                     </flux:select>
                 </div>
@@ -29,7 +29,7 @@
 
             @if ($incompleteSchedules->isEmpty())
                 <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 py-12 dark:border-zinc-600" data-test="empty-incomplete">
-                    <flux:icon name="check-circle" class="mb-4 size-12 text-green-400 dark:text-green-500" aria-hidden="true" />
+                    <flux:icon name="check-circle" class="mb-4 size-12 text-zinc-500 dark:text-zinc-400" aria-hidden="true" />
                     <flux:heading size="lg" class="mb-1">{{ __('All caught up!') }}</flux:heading>
                     <flux:subheading>{{ __('No pending or overdue tasks.') }}</flux:subheading>
                 </div>
@@ -58,7 +58,7 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell class="hidden sm:table-cell">
-                                    <span class="text-sm {{ $task->isMissed() ? 'font-medium text-red-600 dark:text-red-400' : 'text-zinc-600 dark:text-zinc-400' }}" data-test="task-due-date">
+                                    <span class="text-sm {{ $task->isMissed() ? 'font-medium text-zinc-800 dark:text-zinc-200' : 'text-zinc-600 dark:text-zinc-400' }}" data-test="task-due-date">
                                         {{ $task->due_date->format('M d, Y') }}
                                     </span>
                                 </flux:table.cell>
@@ -126,7 +126,7 @@
                                                 {{ $task->due_date->format('M d, Y') }}
                                             </span>
                                         @else
-                                            <span class="text-sm text-zinc-400 dark:text-zinc-500">—</span>
+                                            <span class="text-sm text-zinc-400 dark:text-zinc-500">&mdash;</span>
                                         @endif
                                     </flux:table.cell>
 
@@ -136,7 +136,7 @@
                                                 {{ $task->completed_at->format('M d, Y') }}
                                             </span>
                                         @else
-                                            <span class="text-sm text-zinc-400 dark:text-zinc-500">—</span>
+                                            <span class="text-sm text-zinc-400 dark:text-zinc-500">&mdash;</span>
                                         @endif
                                     </flux:table.cell>
 

@@ -66,6 +66,17 @@ trait TaskValidationRules
                 'integer',
                 Rule::exists('workspaces', 'id')->where('user_id', $this->user()->id),
             ],
+            'category' => [
+                'nullable',
+                'string',
+                Rule::in(Task::CATEGORIES),
+            ],
+            'estimated_minutes' => [
+                'nullable',
+                'integer',
+                'min:1',
+                'max:480',
+            ],
         ];
     }
 

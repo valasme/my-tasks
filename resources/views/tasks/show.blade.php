@@ -26,17 +26,7 @@
         </div>
 
         {{-- Flash Messages --}}
-        @if (session('success'))
-            <div class="rounded-lg border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300" data-test="success-message">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if (session('error'))
-            <div class="rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300" data-test="error-message">
-                {{ session('error') }}
-            </div>
-        @endif
+        @include('partials.notifications')
 
         <flux:separator />
 

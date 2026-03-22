@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('tasks', function (Blueprint $table) {
-            $table->foreignId('workspace_id')->nullable()->after('user_id')->constrained()->nullOnDelete();
-            $table->index(['user_id', 'workspace_id']);
+            $table->string('category')->nullable()->after('completed_at');
+            $table->unsignedInteger('estimated_minutes')->nullable()->after('category');
+
+            $table->index(['user_id', 'category']);
         });
     }
 
@@ -23,9 +25,8 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('tasks', function (Blueprint $table) {
-            $table->dropForeign(['workspace_id']);
-            $table->dropIndex(['user_id', 'workspace_id']);
-            $table->dropColumn('workspace_id');
+            $table->dropIndex(['user_id', 'category']);
+            $table->dropColumn(['category', 'estimated_minutes']);
         });
     }
 };

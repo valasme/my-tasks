@@ -25,6 +25,39 @@
                         {{ __('Workspaces') }}
                     </flux:sidebar.item>
                 </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Focus')" class="grid">
+                    <flux:sidebar.item icon="clock" :href="route('pomodoro.index')" :current="request()->routeIs('pomodoro.*')" wire:navigate>
+                        {{ __('Pomodoro') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="calendar" :href="route('time-blocks.index')" :current="request()->routeIs('time-blocks.*')" wire:navigate>
+                        {{ __('Time Blocks') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Prioritization')" class="grid">
+                    <flux:sidebar.item icon="inbox" :href="route('inbox.index')" :current="request()->routeIs('inbox.*')" wire:navigate>
+                        {{ __('Inbox') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="light-bulb" :href="route('someday.index')" :current="request()->routeIs('someday.*')" wire:navigate>
+                        {{ __('Someday / Maybe') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
+
+                <flux:sidebar.group :heading="__('Insights')" class="grid">
+                    <flux:sidebar.item icon="chart-bar" :href="route('analytics.index')" :current="request()->routeIs('analytics.*')" wire:navigate>
+                        {{ __('Analytics') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="trophy" :href="route('gamification.index')" :current="request()->routeIs('gamification.*')" wire:navigate>
+                        {{ __('Gamification') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="face-smile" :href="route('mood-logs.index')" :current="request()->routeIs('mood-logs.*')" wire:navigate>
+                        {{ __('Mood Tracker') }}
+                    </flux:sidebar.item>
+                    <flux:sidebar.item icon="clipboard-document-list" :href="route('weekly-reviews.index')" :current="request()->routeIs('weekly-reviews.*')" wire:navigate>
+                        {{ __('Weekly Reviews') }}
+                    </flux:sidebar.item>
+                </flux:sidebar.group>
             </flux:sidebar.nav>
 
             <flux:spacer />

@@ -24,7 +24,7 @@
                 name="title"
                 :label="__('Title')"
                 :placeholder="__('Enter task title...')"
-                :value="old('title')"
+                :value="old('title', request('title'))"
                 required
                 data-test="task-title-input"
             />
@@ -36,12 +36,12 @@
                 :placeholder="__('Describe the task (optional)...')"
                 rows="4"
                 data-test="task-description-input"
-            >{{ old('description') }}</flux:textarea>
+            >{{ old('description', request('description')) }}</flux:textarea>
 
             {{-- Priority --}}
             <flux:select name="priority" :label="__('Priority')" data-test="task-priority-select">
                 @foreach (\App\Models\Task::PRIORITIES as $priority)
-                    <flux:select.option :value="$priority" :selected="old('priority', 'low') === $priority">
+                    <flux:select.option :value="$priority" :selected="old('priority', request('priority', 'low')) === $priority">
                         {{ ucfirst($priority) }}
                     </flux:select.option>
                 @endforeach

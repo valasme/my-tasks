@@ -26,5 +26,14 @@ class DatabaseSeeder extends Seeder
 
         $this->call(WorkspaceSeeder::class);
         $this->call(TaskSeeder::class);
+        $this->call(HabitStreakSeeder::class);
+        $this->call(ProductivityLogSeeder::class);
+        $this->call(PomodoroSessionSeeder::class);
+        $this->call(TimeBlockSeeder::class);
+        $this->call(InboxItemSeeder::class);
+        $this->call(XpSeeder::class);
+        $this->call(DailyGoalSeeder::class);
+        $this->call(WeeklyReviewSeeder::class);
+        $this->call(MoodLogSeeder::class);
     }
 }

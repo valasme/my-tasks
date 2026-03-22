@@ -116,4 +116,16 @@ class TaskFactory extends Factory
             'status' => 'pending',
         ]);
     }
+
+    /**
+     * Indicate the task is a "Someday / Maybe" item.
+     */
+    public function somedayMaybe(): static
+    {
+        return $this->state(fn (array $attributes): array => [
+            'category' => 'someday_maybe',
+            'status' => 'pending',
+            'due_date' => null,
+        ]);
+    }
 }

@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Tasks')">
+﻿<x-layouts::app :title="__('Tasks')">
     <div class="flex w-full flex-col gap-10">
         {{-- Header --}}
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -14,17 +14,7 @@
         </div>
 
         {{-- Flash Messages --}}
-        @if (session('success'))
-            <div class="rounded-lg border border-green-200 bg-green-50 px-5 py-4 text-sm text-green-700 dark:border-green-700 dark:bg-green-900/30 dark:text-green-300" data-test="success-message">
-                {{ session('success') }}
-            </div>
-        @endif
-
-        @if (session('error'))
-            <div class="rounded-lg border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700 dark:border-red-700 dark:bg-red-900/30 dark:text-red-300" data-test="error-message">
-                {{ session('error') }}
-            </div>
-        @endif
+        @include('partials.notifications')
 
         {{-- Task Table --}}
         <div>
@@ -36,10 +26,10 @@
                             {{ __('Newest First') }}
                         </flux:select.option>
                         <flux:select.option value="{{ route('tasks.index', ['sort' => 'title_asc']) }}" :selected="$sort === 'title_asc'">
-                            {{ __('Title A–Z') }}
+                            {{ __('Title A-Z') }}
                         </flux:select.option>
                         <flux:select.option value="{{ route('tasks.index', ['sort' => 'title_desc']) }}" :selected="$sort === 'title_desc'">
-                            {{ __('Title Z–A') }}
+                            {{ __('Title Z-A') }}
                         </flux:select.option>
                     </flux:select>
                 </div>
@@ -102,11 +92,11 @@
                                         {{ $visible->map(fn ($t) => \Carbon\Carbon::createFromFormat('H:i', $t)->format('g:i A'))->join(', ') }}@if ($remaining > 0)<span class="ml-1 text-zinc-400 dark:text-zinc-500">+{{ $remaining }} {{ __('more') }}</span>@endif
                                     </span>
                                 @elseif ($task->due_date)
-                                    <span class="text-sm {{ $task->due_date->isPast() && !$task->due_date->isToday() ? 'text-red-600 dark:text-red-400' : 'text-zinc-600 dark:text-zinc-400' }}" data-test="task-schedule">
+                                    <span class="text-sm {{ $task->due_date->isPast() && !$task->due_date->isToday() ? 'font-medium text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400' }}" data-test="task-schedule">
                                         {{ $task->due_date->format('M d, Y') }}
                                     </span>
                                 @else
-                                    <span class="text-sm text-zinc-400 dark:text-zinc-500">—</span>
+                                    <span class="text-sm text-zinc-400 dark:text-zinc-500">&mdash;</span>
                                 @endif
                             </flux:table.cell>
 

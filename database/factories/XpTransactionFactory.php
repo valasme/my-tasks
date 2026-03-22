@@ -23,7 +23,7 @@ class XpTransactionFactory extends Factory
         return [
             'user_id' => User::factory(),
             'points' => fake()->numberBetween(5, 50),
-            'reason' => fake()->randomElement(['task_completed', 'streak_bonus', 'daily_goal_met', 'pomodoro_completed']),
+            'reason' => fake()->randomElement(['task_completed', 'streak_bonus', 'daily_goal_met']),
         ];
     }
 }

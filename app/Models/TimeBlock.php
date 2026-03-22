@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\TimeBlockFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,9 +40,19 @@ class TimeBlock extends Model
     protected function casts(): array
     {
         return [
-            'date' => 'date',
             'estimated_minutes' => 'integer',
         ];
+    }
+
+    /**
+     * Get/set the date attribute, ensuring Y-m-d storage format.
+     */
+    protected function date(): Attribute
+    {
+        return Attribute::make(
+            get: fn ($value) => $value ? Carbon::parse($value) : null,
+            set: fn ($value) => $value ? Carbon::parse($value)->format('Y-m-d') : null,
+        );
     }
 
     /**
@@ -65,7 +76,7 @@ class TimeBlock extends Model
      */
     public function formattedStartTime(): string
     {
-        return Carbon::createFromFormat('H:i:s', $this->start_time)->format('g:i A');
+        return Carbon::parse($this->start_time)->format('g:i A');
     }
 
     /**
@@ -73,6 +84,6 @@ class TimeBlock extends Model
      */
     public function formattedEndTime(): string
     {
-        return Carbon::createFromFormat('H:i:s', $this->end_time)->format('g:i A');
+        return Carbon::parse($this->end_time)->format('g:i A');
     }
 }

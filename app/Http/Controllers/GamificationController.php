@@ -45,7 +45,7 @@ class GamificationController extends Controller
     {
         try {
             $request->user()->dailyGoals()->updateOrCreate(
-                ['date' => today()->format('Y-m-d')],
+                ['date' => today()->startOfDay()],
                 ['target_count' => $request->validated('target_count')],
             );
 

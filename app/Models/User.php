@@ -34,7 +34,6 @@ use Laravel\Fortify\TwoFactorAuthenticatable;
  * @property-read Collection<int, Workspace>  $workspaces
  * @property-read Collection<int, HabitStreak> $habitStreaks
  * @property-read Collection<int, ProductivityLog> $productivityLogs
- * @property-read Collection<int, PomodoroSession> $pomodoroSessions
  * @property-read Collection<int, TimeBlock> $timeBlocks
  * @property-read Collection<int, InboxItem> $inboxItems
  * @property-read UserXp|null $xp
@@ -105,14 +104,6 @@ class User extends Authenticatable
     public function productivityLogs(): HasMany
     {
         return $this->hasMany(ProductivityLog::class);
-    }
-
-    /**
-     * Get the pomodoro sessions for the user.
-     */
-    public function pomodoroSessions(): HasMany
-    {
-        return $this->hasMany(PomodoroSession::class);
     }
 
     /**

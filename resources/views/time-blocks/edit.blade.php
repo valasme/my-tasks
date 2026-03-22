@@ -9,7 +9,7 @@
             </div>
             <div>
                 <flux:heading size="xl">{{ __('Edit Time Block') }}</flux:heading>
-                <flux:subheading class="mt-1">{{ __('Update your time block.') }}</flux:subheading>
+                <flux:subheading class="mt-1">{{ $timeBlock->title }}</flux:subheading>
             </div>
         </div>
 
@@ -28,7 +28,7 @@
                 @endforeach
             </flux:select>
 
-            <flux:input name="date" type="date" :label="__('Date')" :value="old('date', $timeBlock->date)" required />
+            <flux:input name="date" type="date" :label="__('Date')" :value="old('date', $timeBlock->date->format('Y-m-d'))" required />
 
             <div class="grid grid-cols-2 gap-4">
                 <flux:input name="start_time" type="time" :label="__('Start Time')" :value="old('start_time', $timeBlock->start_time)" required />

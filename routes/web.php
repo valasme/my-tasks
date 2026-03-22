@@ -5,7 +5,6 @@ use App\Http\Controllers\DueTaskController;
 use App\Http\Controllers\GamificationController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\MoodLogController;
-use App\Http\Controllers\PomodoroController;
 use App\Http\Controllers\SomedayController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TimeBlockController;
@@ -23,12 +22,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Analytics
     Route::get('analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
-
-    // Pomodoro Timer
-    Route::get('pomodoro', [PomodoroController::class, 'index'])->name('pomodoro.index');
-    Route::post('pomodoro/start', [PomodoroController::class, 'start'])->name('pomodoro.start');
-    Route::post('pomodoro/{pomodoro}/stop', [PomodoroController::class, 'stop'])->name('pomodoro.stop');
-    Route::post('pomodoro/{pomodoro}/cancel', [PomodoroController::class, 'cancel'])->name('pomodoro.cancel');
 
     // Time Blocks
     Route::resource('time-blocks', TimeBlockController::class)->except(['show']);

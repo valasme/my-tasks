@@ -58,7 +58,7 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell class="hidden sm:table-cell">
-                                    <span class="text-sm {{ $task->isMissed() ? 'font-medium text-zinc-800 dark:text-zinc-200' : 'text-zinc-600 dark:text-zinc-400' }}" data-test="task-due-date">
+                                    <span class="text-sm {{ $task->isMissed() ? 'font-medium text-red-600' : 'text-zinc-600 dark:text-zinc-400' }}" data-test="task-due-date">
                                         {{ $task->due_date->format('M d, Y') }}
                                     </span>
                                 </flux:table.cell>

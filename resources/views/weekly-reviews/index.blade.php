@@ -32,7 +32,7 @@
                     <div class="rounded-xl border border-zinc-200 bg-white p-6 dark:border-zinc-700 dark:bg-zinc-900">
                         <div class="flex items-start justify-between">
                             <div>
-                                <flux:heading size="lg">{{ __('Week of :date', ['date' => $review->week_start->format('M d, Y')]) }}</flux:heading>
+                                <flux:heading size="lg">{{ __('Week of :date', ['date' => $review->week_start->format('M j, Y')]) }}</flux:heading>
                                 <div class="mt-3 grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
                                     <div>
                                         <span class="text-zinc-500">{{ __('Completed') }}</span>

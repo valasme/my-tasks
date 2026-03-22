@@ -8,6 +8,7 @@ use App\Models\TimeBlock;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -25,16 +26,24 @@ class TimeBlockController extends Controller
     {
         $this->authorize('viewAny', TimeBlock::class);
 
-        $date = $request->query('date', today()->format('Y-m-d'));
+        $date = $this->resolveDate($request->query('date'));
 
         $timeBlocks = $request->user()
             ->timeBlocks()
             ->with('task:id,title')
-            ->where('date', $date)
+            ->whereDate('date', $date)
             ->orderBy('start_time')
             ->get();
 
-        return view('time-blocks.index', compact('timeBlocks', 'date'));
+        $allTimeBlocks = $request->user()
+            ->timeBlocks()
+            ->with('task:id,title')
+            ->orderByDesc('date')
+            ->orderBy('start_time')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('time-blocks.index', compact('timeBlocks', 'date', 'allTimeBlocks'));
     }
 
     /**
@@ -128,6 +137,22 @@ class TimeBlockController extends Controller
             return redirect()
                 ->back()
                 ->with('error', 'Something went wrong while deleting the time block. Please try again.');
+        }
+    }
+
+    /**
+     * Resolve and validate the date query parameter, defaulting to today.
+     */
+    private function resolveDate(?string $dateInput): string
+    {
+        if (! $dateInput) {
+            return today()->format('Y-m-d');
+        }
+
+        try {
+            return Carbon::parse($dateInput)->format('Y-m-d');
+        } catch (\Throwable) {
+            return today()->format('Y-m-d');
         }
     }
 }

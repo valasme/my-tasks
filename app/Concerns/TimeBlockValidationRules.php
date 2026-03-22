@@ -3,6 +3,7 @@
 namespace App\Concerns;
 
 use Illuminate\Contracts\Validation\ValidationRule;
+use Illuminate\Validation\Rule;
 
 /**
  * Shared validation rules for time block form requests.
@@ -18,7 +19,7 @@ trait TimeBlockValidationRules
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'task_id' => ['nullable', 'integer', 'exists:tasks,id'],
+            'task_id' => ['nullable', 'integer', Rule::exists('tasks', 'id')->where('user_id', $this->user()->id)],
             'date' => $this->dateRules(),
             'start_time' => ['required', 'date_format:H:i'],
             'end_time' => ['required', 'date_format:H:i', 'after:start_time'],
@@ -45,6 +46,7 @@ trait TimeBlockValidationRules
     {
         return [
             'end_time.after' => 'The end time must be after the start time.',
+            'task_id.exists' => 'The selected task does not exist or does not belong to you.',
         ];
     }
 }

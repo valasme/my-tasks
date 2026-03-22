@@ -28,7 +28,6 @@ class DatabaseSeeder extends Seeder
         $this->call(TaskSeeder::class);
         $this->call(HabitStreakSeeder::class);
         $this->call(ProductivityLogSeeder::class);
-        $this->call(PomodoroSessionSeeder::class);
         $this->call(TimeBlockSeeder::class);
         $this->call(InboxItemSeeder::class);
         $this->call(XpSeeder::class);

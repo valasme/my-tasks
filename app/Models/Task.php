@@ -34,7 +34,6 @@ use Illuminate\Support\Carbon;
  * @property-read Workspace|null         $workspace
  * @property-read HabitStreak|null        $habitStreak
  * @property-read Collection<int, ProductivityLog> $productivityLogs
- * @property-read Collection<int, PomodoroSession> $pomodoroSessions
  * @property-read Collection<int, MoodLog> $moodLogs
  */
 #[Fillable(['title', 'description', 'status', 'priority', 'due_date', 'is_recurring_daily', 'recurring_times', 'completed_at', 'workspace_id', 'category', 'estimated_minutes'])]
@@ -220,7 +219,7 @@ class Task extends Model
             'pending' => 'bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300',
             'missed' => 'bg-zinc-200 text-zinc-800 dark:bg-zinc-700 dark:text-zinc-200',
             'completed_on_time' => 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
-            'completed_late' => 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400',
+            'completed_late' => 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
             default => 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300',
         };
     }
@@ -239,14 +238,6 @@ class Task extends Model
     public function productivityLogs(): HasMany
     {
         return $this->hasMany(ProductivityLog::class);
-    }
-
-    /**
-     * Get the pomodoro sessions for this task.
-     */
-    public function pomodoroSessions(): HasMany
-    {
-        return $this->hasMany(PomodoroSession::class);
     }
 
     /**

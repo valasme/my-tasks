@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\HabitStreak;
 use App\Models\Task;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -73,22 +72,6 @@ class AnalyticsTest extends TestCase
         $response->assertOk();
         $response->assertSeeText('2');
         $response->assertSeeText('3');
-    }
-
-    public function test_analytics_shows_habit_streaks(): void
-    {
-        $user = User::factory()->create();
-        $task = Task::factory()->recurringDaily()->for($user)->create(['title' => 'Morning Run']);
-
-        HabitStreak::factory()->for($user)->for($task)->create([
-            'current_streak' => 7,
-        ]);
-
-        $response = $this->actingAs($user)->get(route('analytics.index'));
-
-        $response->assertOk();
-        $response->assertSeeText('Morning Run');
-        $response->assertSeeText('7');
     }
 
     public function test_analytics_only_shows_own_data(): void

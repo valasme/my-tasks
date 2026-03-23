@@ -35,9 +35,6 @@
                 <flux:sidebar.item icon="chart-bar" :href="route('analytics.index')" :current="request()->routeIs('analytics.*')" wire:navigate>
                     {{ __('Analytics') }}
                 </flux:sidebar.item>
-                <flux:sidebar.item icon="trophy" :href="route('gamification.index')" :current="request()->routeIs('gamification.*')" wire:navigate>
-                    {{ __('Gamification') }}
-                </flux:sidebar.item>
                 <flux:sidebar.item icon="face-smile" :href="route('mood-logs.index')" :current="request()->routeIs('mood-logs.*')" wire:navigate>
                     {{ __('Mood Tracker') }}
                 </flux:sidebar.item>

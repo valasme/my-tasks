@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-	Effortless task management for small teams, built with Laravel & Livewire.
+	A productivity-focused task manager with GTD workflows, time blocking, and analytics — built with Laravel & Livewire.
 </p>
 
 ---
@@ -36,12 +36,41 @@
 
 ## Overview
 
-MyTasks is a task management application designed for small teams. It focuses on task creation, assignment, prioritization, and due-date tracking — a lightweight task CRUD app.
+MyTasks is a productivity-focused task management application. Beyond basic task CRUD, it incorporates GTD (Getting Things Done) workflows, time blocking, weekly reviews, mood logging, and analytics — giving you a comprehensive system for staying organized and motivated.
 
 ## Features
 
-- **Tasks** — Create, update, and track tasks with status, priority, and due dates.
-- Authentication powered by Laravel Fortify.
+### Core Task Management
+
+- **Tasks** — Full CRUD with statuses (pending, in progress, completed), priorities (low, medium, high, urgent), due dates, and estimated minutes.
+- **Workspace Grouping** — Organize tasks into named workspaces by project or domain.
+- **Schedule Status Tracking** — Each task automatically derives a schedule status (pending, missed, completed on time, completed late) from its due date and completion timestamp.
+- **Due Tasks View** — A dedicated view surfacing overdue and upcoming tasks that need immediate attention, with sorting options.
+- **Recurring Daily Tasks** — Mark tasks as recurring with configurable daily repetition counts.
+
+### GTD Workflows
+
+- **Inbox (Quick Capture)** — Rapidly capture ideas into an inbox. Review and convert items into full tasks later, following the GTD "collect then process" methodology.
+- **Someday/Maybe List** — Park tasks you might want to do eventually but aren't actionable now. Activate them into regular tasks when ready.
+
+### Time Blocking
+
+- **Time Blocks** — Schedule blocks of time on specific dates with start and end times, optionally linked to a task. Supports a day-view calendar for daily planning.
+
+### Analytics & Insights
+
+- **Productivity Analytics** — View completion ratios and tasks completed per day (last 14 days).
+- **Mood & Energy Logging** — Log your energy level (energized, neutral, drained) optionally tied to a task, with notes. Correlate well-being with productivity over time.
+- **Weekly Reviews** — Record end-of-week summaries capturing tasks completed, missed, and created, plus freeform notes. Includes computed completion rate.
+
+### Authentication & Security
+
+- Authentication powered by Laravel Fortify (login, registration, email verification, password reset).
+- Two-factor authentication support.
+- User settings for profile, appearance, security, and account deletion.
+
+### UI
+
 - Responsive UI using Livewire, Flux UI, and Tailwind CSS.
 
 ## Tech Stack

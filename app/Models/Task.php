@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -32,8 +31,6 @@ use Illuminate\Support\Carbon;
  * @property int|null $estimated_minutes
  * @property-read User                  $user
  * @property-read Workspace|null         $workspace
- * @property-read HabitStreak|null        $habitStreak
- * @property-read Collection<int, ProductivityLog> $productivityLogs
  * @property-read Collection<int, MoodLog> $moodLogs
  */
 #[Fillable(['title', 'description', 'status', 'priority', 'due_date', 'is_recurring_daily', 'recurring_times', 'completed_at', 'workspace_id', 'category', 'estimated_minutes'])]
@@ -222,22 +219,6 @@ class Task extends Model
             'completed_late' => 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
             default => 'bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300',
         };
-    }
-
-    /**
-     * Get the habit streak for this task.
-     */
-    public function habitStreak(): HasOne
-    {
-        return $this->hasOne(HabitStreak::class);
-    }
-
-    /**
-     * Get the productivity logs for this task.
-     */
-    public function productivityLogs(): HasMany
-    {
-        return $this->hasMany(ProductivityLog::class);
     }
 
     /**

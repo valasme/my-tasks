@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\AnalyticsController;
 use App\Http\Controllers\DueTaskController;
-use App\Http\Controllers\GamificationController;
 use App\Http\Controllers\InboxController;
 use App\Http\Controllers\MoodLogController;
 use App\Http\Controllers\SomedayController;
@@ -37,10 +36,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('someday/create', [SomedayController::class, 'create'])->name('someday.create');
     Route::post('someday', [SomedayController::class, 'store'])->name('someday.store');
     Route::post('someday/{task}/activate', [SomedayController::class, 'activate'])->name('someday.activate');
-
-    // Gamification (XP, levels, daily goals)
-    Route::get('gamification', [GamificationController::class, 'index'])->name('gamification.index');
-    Route::post('gamification/daily-goal', [GamificationController::class, 'setDailyGoal'])->name('gamification.daily-goal');
 
     // Weekly Reviews
     Route::get('weekly-reviews', [WeeklyReviewController::class, 'index'])->name('weekly-reviews.index');

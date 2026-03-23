@@ -67,6 +67,18 @@
                 @endforeach
             </flux:select>
 
+            {{-- Estimated Time --}}
+            <flux:input
+                name="estimated_minutes"
+                type="number"
+                :label="__('Estimated Time (minutes)')"
+                :placeholder="__('e.g. 30, 60, 120')"
+                :value="old('estimated_minutes', $task->estimated_minutes)"
+                min="1"
+                max="480"
+                data-test="task-estimate-input"
+            />
+
             {{-- Recurring Daily Toggle --}}
             <div class="space-y-4">
                 <flux:checkbox
@@ -80,7 +92,7 @@
             </div>
 
             {{-- Status (hidden when recurring) --}}
-            <div x-show="!isRecurring" >
+            <div x-show="!isRecurring">
                 <flux:select name="status" :label="__('Status')" data-test="task-status-select" x-bind:disabled="isRecurring">
                     @foreach (\App\Models\Task::STATUSES as $status)
                         <flux:select.option :value="$status" :selected="old('status', $task->status) === $status">
@@ -91,7 +103,7 @@
             </div>
 
             {{-- Due Date (hidden when recurring) --}}
-            <div x-show="!isRecurring" >
+            <div x-show="!isRecurring">
                 <flux:input
                     name="due_date"
                     type="date"
@@ -105,7 +117,7 @@
             {{-- Recurring Times (shown when recurring) --}}
             <div x-show="isRecurring">
                 <flux:label>{{ __('Daily Times') }}</flux:label>
-                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Add one or more times this task should recur each day.') }}</p>
+                <p class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">{{ __('Add one or more times this task should recur each day (max 10).') }}</p>
                 <div class="mt-3 space-y-2" x-data="{ times: {{ Js::from(old('recurring_times', $task->recurring_times ?? ['09:00'])) }} }">
                     <template x-for="(time, index) in times" :key="index">
                         <div class="flex items-center gap-2">
@@ -130,6 +142,7 @@
                     </template>
                     <button
                         type="button"
+                        x-show="times.length < 10"
                         x-on:click="times.push('09:00')"
                         class="cursor-pointer inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-zinc-600 transition hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
                         data-test="add-time"

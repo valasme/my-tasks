@@ -1,4 +1,4 @@
-﻿<x-layouts::app :title="__('Tasks')">
+<x-layouts::app :title="__('Tasks')">
     <div class="flex w-full flex-col gap-10">
         {{-- Header --}}
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -16,136 +16,226 @@
         {{-- Flash Messages --}}
         @include('partials.notifications')
 
+        {{-- Filters --}}
+        <form method="GET" action="{{ route('tasks.index') }}" class="space-y-4" data-test="task-filters">
+            {{-- Search --}}
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1">
+                    <flux:input
+                        name="search"
+                        type="search"
+                        :placeholder="__('Search tasks...')"
+                        :value="$filters['search'] ?? ''"
+                        size="sm"
+                        icon="magnifying-glass"
+                        data-test="search-input"
+                        aria-label="{{ __('Search tasks') }}"
+                    />
+                </div>
+                <div class="flex items-center gap-2">
+                    <flux:button class="cursor-pointer" type="submit" variant="primary" size="sm" data-test="apply-filters">
+                        {{ __('Filter') }}
+                    </flux:button>
+                    @if ($filters['search'] || $filters['status'] || $filters['priority'] || $filters['workspace'] || $filters['sort'])
+                        <flux:button class="cursor-pointer" href="{{ route('tasks.index') }}" variant="ghost" size="sm" data-test="clear-filters">
+                            {{ __('Clear') }}
+                        </flux:button>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Filter Dropdowns --}}
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {{-- Status --}}
+                <flux:select name="status" size="sm" aria-label="{{ __('Filter by status') }}" data-test="filter-status">
+                    <flux:select.option value="">{{ __('All Statuses') }}</flux:select.option>
+                    @foreach ($statuses as $status)
+                        <flux:select.option :value="$status" :selected="($filters['status'] ?? '') === $status">
+                            {{ str_replace('_', ' ', ucfirst($status)) }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+
+                {{-- Priority --}}
+                <flux:select name="priority" size="sm" aria-label="{{ __('Filter by priority') }}" data-test="filter-priority">
+                    <flux:select.option value="">{{ __('All Priorities') }}</flux:select.option>
+                    @foreach ($priorities as $priority)
+                        <flux:select.option :value="$priority" :selected="($filters['priority'] ?? '') === $priority">
+                            {{ ucfirst($priority) }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+
+                {{-- Workspace --}}
+                <flux:select name="workspace" size="sm" aria-label="{{ __('Filter by workspace') }}" data-test="filter-workspace">
+                    <flux:select.option value="">{{ __('All Workspaces') }}</flux:select.option>
+                    @foreach ($workspaces as $workspace)
+                        <flux:select.option :value="$workspace->id" :selected="($filters['workspace'] ?? '') == $workspace->id">
+                            {{ $workspace->name }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+
+                {{-- Sort --}}
+                <flux:select name="sort" size="sm" aria-label="{{ __('Sort tasks') }}" data-test="sort-select">
+                    <flux:select.option value="">{{ __('Newest First') }}</flux:select.option>
+                    <flux:select.option value="oldest" :selected="($filters['sort'] ?? '') === 'oldest'">{{ __('Oldest First') }}</flux:select.option>
+                    <flux:select.option value="title_asc" :selected="($filters['sort'] ?? '') === 'title_asc'">{{ __('Title A-Z') }}</flux:select.option>
+                    <flux:select.option value="title_desc" :selected="($filters['sort'] ?? '') === 'title_desc'">{{ __('Title Z-A') }}</flux:select.option>
+                    <flux:select.option value="due_date_asc" :selected="($filters['sort'] ?? '') === 'due_date_asc'">{{ __('Due Date (Earliest)') }}</flux:select.option>
+                    <flux:select.option value="due_date_desc" :selected="($filters['sort'] ?? '') === 'due_date_desc'">{{ __('Due Date (Latest)') }}</flux:select.option>
+                    <flux:select.option value="priority_desc" :selected="($filters['sort'] ?? '') === 'priority_desc'">{{ __('Priority (High-Low)') }}</flux:select.option>
+                    <flux:select.option value="priority_asc" :selected="($filters['sort'] ?? '') === 'priority_asc'">{{ __('Priority (Low-High)') }}</flux:select.option>
+                </flux:select>
+            </div>
+        </form>
+
         {{-- Task Table --}}
         <div>
-            <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <flux:heading size="lg">{{ __('All Tasks') }}</flux:heading>
-                <div class="w-full sm:w-48">
-                    <flux:select size="sm" aria-label="{{ __('Sort tasks') }}" data-test="sort-select" onchange="window.location.href=this.value">
-                        <flux:select.option value="{{ route('tasks.index') }}" :selected="!$sort">
-                            {{ __('Newest First') }}
-                        </flux:select.option>
-                        <flux:select.option value="{{ route('tasks.index', ['sort' => 'title_asc']) }}" :selected="$sort === 'title_asc'">
-                            {{ __('Title A-Z') }}
-                        </flux:select.option>
-                        <flux:select.option value="{{ route('tasks.index', ['sort' => 'title_desc']) }}" :selected="$sort === 'title_desc'">
-                            {{ __('Title Z-A') }}
-                        </flux:select.option>
-                    </flux:select>
-                </div>
+            <div class="mb-4 flex items-center justify-between">
+                <flux:heading size="lg">
+                    {{ __('All Tasks') }}
+                    <span class="ml-1 text-sm font-normal text-zinc-500 dark:text-zinc-400">({{ $tasks->total() }})</span>
+                </flux:heading>
             </div>
 
             @if ($tasks->isEmpty())
                 <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 py-16 dark:border-zinc-600">
-                <flux:icon name="clipboard-document-list" class="mb-4 size-12 text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
-                <flux:heading size="lg" class="mb-1">{{ __('No tasks yet') }}</flux:heading>
-                <flux:subheading class="mb-4">{{ __('Create your first task to get started.') }}</flux:subheading>
-                <flux:button class="cursor-pointer" aria-label="{{ __('Create New Task') }}" href="{{ route('tasks.create') }}" icon="plus" variant="primary" size="sm">
-                    {{ __('New Task') }}
-                </flux:button>
-            </div>
-        @else
-            <flux:table>
-                <flux:table.columns>
-                    <flux:table.column>{{ __('Title') }}</flux:table.column>
-                    <flux:table.column class="hidden md:table-cell">{{ __('Priority') }}</flux:table.column>
-                    <flux:table.column class="hidden sm:table-cell">{{ __('Status') }}</flux:table.column>
-                    <flux:table.column class="hidden lg:table-cell">{{ __('Schedule') }}</flux:table.column>
-                    <flux:table.column align="end">{{ __('Actions') }}</flux:table.column>
-                </flux:table.columns>
+                    <flux:icon name="clipboard-document-list" class="mb-4 size-12 text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
 
-                <flux:table.rows>
-                    @foreach ($tasks as $task)
-                        <flux:table.row>
-                            <flux:table.cell class="font-medium">
-                                <a href="{{ route('tasks.show', $task) }}" class="hover:underline" data-test="task-title" aria-label="{{ __('View Task') }}">
-                                    {{ $task->title }}
-                                </a>
-                            </flux:table.cell>
+                    @if ($filters['search'] || $filters['status'] || $filters['priority'] || $filters['workspace'])
+                        <flux:heading size="lg" class="mb-1">{{ __('No matching tasks') }}</flux:heading>
+                        <flux:subheading class="mb-4">{{ __('Try adjusting your filters or search terms.') }}</flux:subheading>
+                        <flux:button class="cursor-pointer" href="{{ route('tasks.index') }}" variant="ghost" size="sm" icon="x-mark">
+                            {{ __('Clear Filters') }}
+                        </flux:button>
+                    @else
+                        <flux:heading size="lg" class="mb-1">{{ __('No tasks yet') }}</flux:heading>
+                        <flux:subheading class="mb-4">{{ __('Create your first task to get started.') }}</flux:subheading>
+                        <flux:button class="cursor-pointer" aria-label="{{ __('Create New Task') }}" href="{{ route('tasks.create') }}" icon="plus" variant="primary" size="sm">
+                            {{ __('New Task') }}
+                        </flux:button>
+                    @endif
+                </div>
+            @else
+                <flux:table>
+                    <flux:table.columns>
+                        <flux:table.column>{{ __('Title') }}</flux:table.column>
+                        <flux:table.column class="hidden md:table-cell">{{ __('Priority') }}</flux:table.column>
+                        <flux:table.column class="hidden sm:table-cell">{{ __('Status') }}</flux:table.column>
+                        <flux:table.column class="hidden lg:table-cell">{{ __('Schedule') }}</flux:table.column>
+                        <flux:table.column class="hidden lg:table-cell">{{ __('Estimate') }}</flux:table.column>
+                        <flux:table.column align="end">{{ __('Actions') }}</flux:table.column>
+                    </flux:table.columns>
 
-                            <flux:table.cell class="hidden md:table-cell">
-                                <span class="{{ $task->priorityBadgeClasses() }} inline-flex items-center rounded-md px-2 py-1 text-xs font-medium" data-test="task-priority">
-                                    {{ $task->priorityLabel() }}
-                                </span>
-                            </flux:table.cell>
+                    <flux:table.rows>
+                        @foreach ($tasks as $task)
+                            <flux:table.row>
+                                {{-- Title --}}
+                                <flux:table.cell class="font-medium">
+                                    <a href="{{ route('tasks.show', $task) }}" class="hover:underline" data-test="task-title" aria-label="{{ __('View Task') }}">
+                                        {{ $task->title }}
+                                    </a>
+                                </flux:table.cell>
 
-                            <flux:table.cell class="hidden sm:table-cell">
-                                @if ($task->is_recurring_daily)
-                                    <span class="inline-flex items-center rounded-md bg-zinc-200 px-2 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200" data-test="task-recurring">
-                                        {{ __('Daily') }}
+                                {{-- Priority --}}
+                                <flux:table.cell class="hidden md:table-cell">
+                                    <span class="{{ $task->priorityBadgeClasses() }} inline-flex items-center rounded-md px-2 py-1 text-xs font-medium" data-test="task-priority">
+                                        {{ $task->priorityLabel() }}
                                     </span>
-                                @else
-                                    <span class="{{ $task->statusBadgeClasses() }} inline-flex items-center rounded-md px-2 py-1 text-xs font-medium" data-test="task-status">
-                                        {{ $task->statusLabel() }}
-                                    </span>
-                                @endif
-                            </flux:table.cell>
+                                </flux:table.cell>
 
-                            <flux:table.cell class="hidden lg:table-cell">
-                                @if ($task->is_recurring_daily && $task->recurring_times)
-                                    @php
-                                        $formatted = collect($task->recurring_times)->sort()->values();
-                                        $visible = $formatted->take(3);
-                                        $remaining = $formatted->count() - 3;
-                                    @endphp
-                                    <span class="text-sm text-zinc-600 dark:text-zinc-400" data-test="task-schedule">
-                                        {{ $visible->map(fn ($t) => \Carbon\Carbon::createFromFormat('H:i', $t)->format('g:i A'))->join(', ') }}@if ($remaining > 0)<span class="ml-1 text-zinc-400 dark:text-zinc-500">+{{ $remaining }} {{ __('more') }}</span>@endif
-                                    </span>
-                                @elseif ($task->due_date)
-                                    <span class="text-sm {{ $task->due_date->isPast() && !$task->due_date->isToday() ? 'font-medium text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400' }}" data-test="task-schedule">
-                                        {{ $task->due_date->format('M d, Y') }}
-                                    </span>
-                                @else
-                                    <span class="text-sm text-zinc-400 dark:text-zinc-500">&mdash;</span>
-                                @endif
-                            </flux:table.cell>
+                                {{-- Status --}}
+                                <flux:table.cell class="hidden sm:table-cell">
+                                    @if ($task->is_recurring_daily)
+                                        <span class="inline-flex items-center rounded-md bg-zinc-200 px-2 py-1 text-xs font-medium text-zinc-700 dark:bg-zinc-600 dark:text-zinc-200" data-test="task-recurring">
+                                            {{ __('Daily') }}
+                                        </span>
+                                    @else
+                                        <span class="{{ $task->statusBadgeClasses() }} inline-flex items-center rounded-md px-2 py-1 text-xs font-medium" data-test="task-status">
+                                            {{ $task->statusLabel() }}
+                                        </span>
+                                    @endif
+                                </flux:table.cell>
 
-                            <flux:table.cell align="end">
-                                <div class="flex items-center justify-end gap-2">
-                                    <flux:button class="cursor-pointer" href="{{ route('tasks.edit', $task) }}" size="sm" variant="ghost" icon="pencil" data-test="edit-task" aria-label="{{ __('Edit Task: :title', ['title' => $task->title]) }}">
-                                        {{ __('Edit') }}
-                                    </flux:button>
-                                    <flux:modal.trigger :name="'delete-task-' . $task->id">
-                                        <flux:button class="cursor-pointer" size="sm" variant="ghost" icon="trash" data-test="delete-task-trigger" aria-label="{{ __('Delete Task: :title', ['title' => $task->title]) }}">
-                                            {{ __('Delete') }}
+                                {{-- Schedule --}}
+                                <flux:table.cell class="hidden lg:table-cell">
+                                    @if ($task->is_recurring_daily && $task->recurring_times)
+                                        @php
+                                            $formatted = collect($task->recurring_times)->sort()->values();
+                                            $visible = $formatted->take(3);
+                                            $remaining = $formatted->count() - 3;
+                                        @endphp
+                                        <span class="text-sm text-zinc-600 dark:text-zinc-400" data-test="task-schedule">
+                                            {{ $visible->map(fn ($t) => \Carbon\Carbon::createFromFormat('H:i', $t)->format('g:i A'))->join(', ') }}@if ($remaining > 0)<span class="ml-1 text-zinc-400 dark:text-zinc-500">+{{ $remaining }} {{ __('more') }}</span>@endif
+                                        </span>
+                                    @elseif ($task->due_date)
+                                        <span class="text-sm {{ $task->due_date->isPast() && !$task->due_date->isToday() ? 'font-medium text-red-600 dark:text-red-400' : 'text-zinc-600 dark:text-zinc-400' }}" data-test="task-schedule">
+                                            {{ $task->due_date->format('M d, Y') }}
+                                        </span>
+                                    @else
+                                        <span class="text-sm text-zinc-400 dark:text-zinc-500">&mdash;</span>
+                                    @endif
+                                </flux:table.cell>
+
+                                {{-- Estimate --}}
+                                <flux:table.cell class="hidden lg:table-cell">
+                                    @if ($task->formattedEstimate())
+                                        <span class="text-sm text-zinc-600 dark:text-zinc-400" data-test="task-estimate">
+                                            {{ $task->formattedEstimate() }}
+                                        </span>
+                                    @else
+                                        <span class="text-sm text-zinc-400 dark:text-zinc-500">&mdash;</span>
+                                    @endif
+                                </flux:table.cell>
+
+                                {{-- Actions --}}
+                                <flux:table.cell align="end">
+                                    <div class="flex items-center justify-end gap-2">
+                                        <flux:button class="cursor-pointer" href="{{ route('tasks.edit', $task) }}" size="sm" variant="ghost" icon="pencil" data-test="edit-task" aria-label="{{ __('Edit Task: :title', ['title' => $task->title]) }}">
+                                            {{ __('Edit') }}
                                         </flux:button>
-                                    </flux:modal.trigger>
-                                </div>
-                            </flux:table.cell>
-                        </flux:table.row>
-                    @endforeach
-                </flux:table.rows>
-            </flux:table>
+                                        <flux:modal.trigger :name="'delete-task-' . $task->id">
+                                            <flux:button class="cursor-pointer" size="sm" variant="ghost" icon="trash" data-test="delete-task-trigger" aria-label="{{ __('Delete Task: :title', ['title' => $task->title]) }}">
+                                                {{ __('Delete') }}
+                                            </flux:button>
+                                        </flux:modal.trigger>
+                                    </div>
+                                </flux:table.cell>
+                            </flux:table.row>
+                        @endforeach
+                    </flux:table.rows>
+                </flux:table>
 
-            {{-- Delete Modals --}}
-            @foreach ($tasks as $task)
-                <flux:modal :name="'delete-task-' . $task->id" class="max-w-sm">
-                    <div class="space-y-4">
-                        <div>
-                            <flux:heading size="lg">{{ __('Delete Task') }}</flux:heading>
-                            <flux:subheading>{{ __('Are you sure you want to delete ":title"? This action cannot be undone.', ['title' => $task->title]) }}</flux:subheading>
+                {{-- Delete Modals --}}
+                @foreach ($tasks as $task)
+                    <flux:modal :name="'delete-task-' . $task->id" class="max-w-sm">
+                        <div class="space-y-4">
+                            <div>
+                                <flux:heading size="lg">{{ __('Delete Task') }}</flux:heading>
+                                <flux:subheading>{{ __('Are you sure you want to delete ":title"? This action cannot be undone.', ['title' => $task->title]) }}</flux:subheading>
+                            </div>
+                            <div class="flex justify-end gap-2">
+                                <flux:modal.close>
+                                    <flux:button class="cursor-pointer" variant="ghost" aria-label="{{ __('Cancel Delete') }}">{{ __('Cancel') }}</flux:button>
+                                </flux:modal.close>
+                                <form method="POST" action="{{ route('tasks.destroy', $task) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <flux:button class="cursor-pointer" type="submit" variant="danger" data-test="confirm-delete" aria-label="{{ __('Confirm Delete') }}">
+                                        {{ __('Delete') }}
+                                    </flux:button>
+                                </form>
+                            </div>
                         </div>
-                        <div class="flex justify-end gap-2">
-                            <flux:modal.close>
-                                <flux:button class="cursor-pointer" variant="ghost" aria-label="{{ __('Cancel Delete') }}">{{ __('Cancel') }}</flux:button>
-                            </flux:modal.close>
-                            <form method="POST" action="{{ route('tasks.destroy', $task) }}">
-                                @csrf
-                                @method('DELETE')
-                                <flux:button class="cursor-pointer" type="submit" variant="danger" data-test="confirm-delete" aria-label="{{ __('Confirm Delete') }}">
-                                    {{ __('Delete') }}
-                                </flux:button>
-                            </form>
-                        </div>
-                    </div>
-                </flux:modal>
-            @endforeach
+                    </flux:modal>
+                @endforeach
 
-            {{-- Pagination --}}
-            <div class="mt-6" data-test="pagination">
-                {{ $tasks->links() }}
-            </div>
-        @endif
+                {{-- Pagination --}}
+                <div class="mt-6" data-test="pagination">
+                    {{ $tasks->links() }}
+                </div>
+            @endif
         </div>
     </div>
 </x-layouts::app>

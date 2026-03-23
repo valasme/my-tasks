@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Models\Task;
 use App\Models\User;
+use App\Models\Workspace;
 use Carbon\CarbonImmutable;
+use Database\Seeders\TaskSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -141,8 +143,8 @@ class TaskTest extends TestCase
         $user = User::factory()->create();
         $otherUser = User::factory()->create();
 
-        $ownTask = Task::factory()->for($user)->create(['title' => 'My Task']);
-        $otherTask = Task::factory()->for($otherUser)->create(['title' => 'Other Task']);
+        Task::factory()->for($user)->create(['title' => 'My Task']);
+        Task::factory()->for($otherUser)->create(['title' => 'Other Task']);
 
         $response = $this->actingAs($user)->get(route('tasks.index'));
 
@@ -178,7 +180,7 @@ class TaskTest extends TestCase
     public function test_index_displays_tasks_with_correct_data(): void
     {
         $user = User::factory()->create();
-        $task = Task::factory()->for($user)->create([
+        Task::factory()->for($user)->create([
             'title' => 'Complete the report',
             'priority' => 'high',
             'status' => 'in_progress',
@@ -201,7 +203,6 @@ class TaskTest extends TestCase
         $response = $this->actingAs($user)->get(route('tasks.index'));
 
         $response->assertOk();
-        // 15 per page, so page 2 should exist
         $response->assertSeeText('Showing');
     }
 
@@ -214,6 +215,34 @@ class TaskTest extends TestCase
 
         $response->assertOk();
         $response->assertSeeText('Daily');
+    }
+
+    public function test_index_shows_task_count(): void
+    {
+        $user = User::factory()->create();
+        Task::factory()->count(3)->for($user)->create();
+
+        $response = $this->actingAs($user)->get(route('tasks.index'));
+
+        $response->assertOk();
+        $response->assertSeeText('(3)');
+    }
+
+    public function test_task_seeder_assigns_tasks_to_users_workspaces(): void
+    {
+        $user = User::factory()->create();
+        Workspace::factory()->count(4)->for($user)->create();
+
+        $this->seed(TaskSeeder::class);
+
+        $seededTasks = Task::query()
+            ->with('workspace')
+            ->where('user_id', $user->id)
+            ->get();
+
+        $this->assertCount(23, $seededTasks);
+        $this->assertTrue($seededTasks->every(fn (Task $task): bool => $task->workspace_id !== null));
+        $this->assertTrue($seededTasks->every(fn (Task $task): bool => $task->workspace?->user_id === $user->id));
     }
 
     // ---------------------------------------------------------------
@@ -621,6 +650,44 @@ class TaskTest extends TestCase
 
         $response->assertOk();
         $response->assertSeeText('Due today');
+    }
+
+    public function test_show_displays_schedule_status(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create([
+            'status' => 'pending',
+            'due_date' => now()->addDays(5)->format('Y-m-d'),
+        ]);
+
+        $response = $this->actingAs($user)->get(route('tasks.show', $task));
+
+        $response->assertOk();
+        $response->assertSeeText('Schedule Status');
+        $response->assertSeeText('Pending');
+    }
+
+    public function test_show_displays_estimated_time(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->withEstimate(90)->for($user)->create();
+
+        $response = $this->actingAs($user)->get(route('tasks.show', $task));
+
+        $response->assertOk();
+        $response->assertSeeText('Estimated Time');
+        $response->assertSeeText('1h 30m');
+    }
+
+    public function test_show_displays_no_estimate_message(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create(['estimated_minutes' => null]);
+
+        $response = $this->actingAs($user)->get(route('tasks.show', $task));
+
+        $response->assertOk();
+        $response->assertSeeText('No estimate set');
     }
 
     // ---------------------------------------------------------------
@@ -1113,6 +1180,32 @@ class TaskTest extends TestCase
         $response->assertSeeTextInOrder(['Zebra Task', 'Apple Task']);
     }
 
+    public function test_index_sort_oldest_first(): void
+    {
+        $user = User::factory()->create();
+
+        Task::factory()->for($user)->create(['title' => 'Newer Task', 'created_at' => now()]);
+        Task::factory()->for($user)->create(['title' => 'Older Task', 'created_at' => now()->subDay()]);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', ['sort' => 'oldest']));
+
+        $response->assertOk();
+        $response->assertSeeTextInOrder(['Older Task', 'Newer Task']);
+    }
+
+    public function test_index_sort_by_due_date_asc(): void
+    {
+        $user = User::factory()->create();
+
+        Task::factory()->for($user)->create(['title' => 'Later Task', 'due_date' => now()->addDays(10)->format('Y-m-d')]);
+        Task::factory()->for($user)->create(['title' => 'Sooner Task', 'due_date' => now()->addDay()->format('Y-m-d')]);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', ['sort' => 'due_date_asc']));
+
+        $response->assertOk();
+        $response->assertSeeTextInOrder(['Sooner Task', 'Later Task']);
+    }
+
     public function test_index_invalid_sort_falls_back_to_default(): void
     {
         $user = User::factory()->create();
@@ -1144,6 +1237,304 @@ class TaskTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('data-test="sort-select"', false);
+    }
+
+    // ---------------------------------------------------------------
+    // Filtering
+    // ---------------------------------------------------------------
+
+    public function test_index_filter_by_status(): void
+    {
+        $user = User::factory()->create();
+
+        Task::factory()->for($user)->create(['title' => 'Pending Task', 'status' => 'pending']);
+        Task::factory()->for($user)->create(['title' => 'Completed Task', 'status' => 'completed']);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', ['status' => 'pending']));
+
+        $response->assertOk();
+        $response->assertSeeText('Pending Task');
+        $response->assertDontSeeText('Completed Task');
+    }
+
+    public function test_index_filter_by_priority(): void
+    {
+        $user = User::factory()->create();
+
+        Task::factory()->for($user)->create(['title' => 'Urgent Task', 'priority' => 'urgent']);
+        Task::factory()->for($user)->create(['title' => 'Low Task', 'priority' => 'low']);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', ['priority' => 'urgent']));
+
+        $response->assertOk();
+        $response->assertSeeText('Urgent Task');
+        $response->assertDontSeeText('Low Task');
+    }
+
+    public function test_index_filter_by_workspace(): void
+    {
+        $user = User::factory()->create();
+        $workspace = Workspace::factory()->for($user)->create(['name' => 'Work']);
+
+        Task::factory()->for($user)->create(['title' => 'Work Task', 'workspace_id' => $workspace->id]);
+        Task::factory()->for($user)->create(['title' => 'Personal Task', 'workspace_id' => null]);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', ['workspace' => $workspace->id]));
+
+        $response->assertOk();
+        $response->assertSeeText('Work Task');
+        $response->assertDontSeeText('Personal Task');
+    }
+
+    public function test_index_ignores_workspace_filter_from_another_user(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+        $otherUsersWorkspace = Workspace::factory()->for($otherUser)->create();
+
+        Task::factory()->for($user)->create(['title' => 'Visible Task One']);
+        Task::factory()->for($user)->create(['title' => 'Visible Task Two']);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', [
+            'workspace' => $otherUsersWorkspace->id,
+        ]));
+
+        $response->assertOk();
+        $response->assertSeeText('Visible Task One');
+        $response->assertSeeText('Visible Task Two');
+    }
+
+    public function test_index_ignores_malformed_workspace_filter(): void
+    {
+        $user = User::factory()->create();
+        $workspace = Workspace::factory()->for($user)->create();
+
+        Task::factory()->for($user)->create(['title' => 'Task A', 'workspace_id' => $workspace->id]);
+        Task::factory()->for($user)->create(['title' => 'Task B', 'workspace_id' => null]);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', [
+            'workspace' => $workspace->id.'-oops',
+        ]));
+
+        $response->assertOk();
+        $response->assertSeeText('Task A');
+        $response->assertSeeText('Task B');
+    }
+
+    public function test_index_search_by_title(): void
+    {
+        $user = User::factory()->create();
+
+        Task::factory()->for($user)->create(['title' => 'Buy groceries']);
+        Task::factory()->for($user)->create(['title' => 'Write report']);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', ['search' => 'groceries']));
+
+        $response->assertOk();
+        $response->assertSeeText('Buy groceries');
+        $response->assertDontSeeText('Write report');
+    }
+
+    public function test_index_search_by_description(): void
+    {
+        $user = User::factory()->create();
+
+        Task::factory()->for($user)->create(['title' => 'Task A', 'description' => 'Contains keyword banana']);
+        Task::factory()->for($user)->create(['title' => 'Task B', 'description' => 'Something else entirely']);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', ['search' => 'banana']));
+
+        $response->assertOk();
+        $response->assertSeeText('Task A');
+        $response->assertDontSeeText('Task B');
+    }
+
+    public function test_index_combined_filters(): void
+    {
+        $user = User::factory()->create();
+
+        Task::factory()->for($user)->create(['title' => 'Match', 'status' => 'pending', 'priority' => 'high']);
+        Task::factory()->for($user)->create(['title' => 'Wrong Status', 'status' => 'completed', 'priority' => 'high']);
+        Task::factory()->for($user)->create(['title' => 'Wrong Priority', 'status' => 'pending', 'priority' => 'low']);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', [
+            'status' => 'pending',
+            'priority' => 'high',
+        ]));
+
+        $response->assertOk();
+        $response->assertSeeText('Match');
+        $response->assertDontSeeText('Wrong Status');
+        $response->assertDontSeeText('Wrong Priority');
+    }
+
+    public function test_index_invalid_filter_values_are_ignored(): void
+    {
+        $user = User::factory()->create();
+        Task::factory()->count(3)->for($user)->create();
+
+        $response = $this->actingAs($user)->get(route('tasks.index', [
+            'status' => 'nonexistent',
+            'priority' => 'super_critical',
+        ]));
+
+        $response->assertOk();
+        $response->assertSeeText('(3)');
+    }
+
+    public function test_index_shows_no_matching_tasks_message_with_filters(): void
+    {
+        $user = User::factory()->create();
+        Task::factory()->for($user)->create(['status' => 'pending']);
+
+        $response = $this->actingAs($user)->get(route('tasks.index', ['status' => 'completed']));
+
+        $response->assertOk();
+        $response->assertSeeText('No matching tasks');
+    }
+
+    public function test_index_clear_filters_button_visible_when_filtered(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('tasks.index', ['status' => 'pending']));
+
+        $response->assertOk();
+        $response->assertSee('data-test="clear-filters"', false);
+    }
+
+    public function test_index_filter_ui_elements_present(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('tasks.index'));
+
+        $response->assertOk();
+        $response->assertSee('data-test="search-input"', false);
+        $response->assertSee('data-test="filter-status"', false);
+        $response->assertSee('data-test="filter-priority"', false);
+        $response->assertSee('data-test="filter-workspace"', false);
+    }
+
+    // ---------------------------------------------------------------
+    // Estimated Minutes
+    // ---------------------------------------------------------------
+
+    public function test_store_with_estimated_minutes(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('tasks.store'), [
+            'title' => 'Estimated Task',
+            'status' => 'pending',
+            'priority' => 'medium',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+            'estimated_minutes' => 45,
+        ]);
+
+        $response->assertRedirect(route('tasks.index'));
+        $response->assertSessionHasNoErrors();
+
+        $this->assertDatabaseHas('tasks', [
+            'title' => 'Estimated Task',
+            'estimated_minutes' => 45,
+        ]);
+    }
+
+    public function test_store_rejects_estimated_minutes_below_min(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('tasks.store'), [
+            'title' => 'Test',
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+            'estimated_minutes' => 0,
+        ]);
+
+        $response->assertSessionHasErrors('estimated_minutes');
+    }
+
+    public function test_store_rejects_estimated_minutes_above_max(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('tasks.store'), [
+            'title' => 'Test',
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+            'estimated_minutes' => 481,
+        ]);
+
+        $response->assertSessionHasErrors('estimated_minutes');
+    }
+
+    public function test_store_allows_null_estimated_minutes(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->post(route('tasks.store'), [
+            'title' => 'No Estimate Task',
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+        ]);
+
+        $response->assertRedirect(route('tasks.index'));
+        $response->assertSessionHasNoErrors();
+    }
+
+    public function test_update_with_estimated_minutes(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->put(route('tasks.update', $task), [
+            'title' => $task->title,
+            'status' => 'pending',
+            'priority' => 'low',
+            'due_date' => now()->addDay()->format('Y-m-d'),
+            'estimated_minutes' => 120,
+        ]);
+
+        $response->assertRedirect(route('tasks.show', $task));
+        $response->assertSessionHasNoErrors();
+
+        $this->assertEquals(120, $task->fresh()->estimated_minutes);
+    }
+
+    // ---------------------------------------------------------------
+    // Model: formattedEstimate()
+    // ---------------------------------------------------------------
+
+    public function test_formatted_estimate_minutes_only(): void
+    {
+        $task = Task::factory()->create(['estimated_minutes' => 30]);
+
+        $this->assertEquals('30m', $task->formattedEstimate());
+    }
+
+    public function test_formatted_estimate_hours_only(): void
+    {
+        $task = Task::factory()->create(['estimated_minutes' => 120]);
+
+        $this->assertEquals('2h', $task->formattedEstimate());
+    }
+
+    public function test_formatted_estimate_hours_and_minutes(): void
+    {
+        $task = Task::factory()->create(['estimated_minutes' => 90]);
+
+        $this->assertEquals('1h 30m', $task->formattedEstimate());
+    }
+
+    public function test_formatted_estimate_null(): void
+    {
+        $task = Task::factory()->create(['estimated_minutes' => null]);
+
+        $this->assertNull($task->formattedEstimate());
     }
 
     // ---------------------------------------------------------------
@@ -1578,5 +1969,144 @@ class TaskTest extends TestCase
             $task = Task::factory()->create(['priority' => $priority]);
             $this->assertEquals($label, $task->priorityLabel());
         }
+    }
+
+    // ---------------------------------------------------------------
+    // Query Scopes
+    // ---------------------------------------------------------------
+
+    public function test_scope_overdue_returns_past_due_incomplete_tasks(): void
+    {
+        $user = User::factory()->create();
+
+        $overdueTask = Task::factory()->overdue()->for($user)->create(['title' => 'Overdue']);
+        Task::factory()->completed()->for($user)->create(['title' => 'Completed']);
+        Task::factory()->for($user)->create(['title' => 'Future', 'due_date' => now()->addDays(5)->format('Y-m-d')]);
+
+        $results = $user->tasks()->overdue()->pluck('title');
+
+        $this->assertContains('Overdue', $results);
+        $this->assertNotContains('Completed', $results);
+        $this->assertNotContains('Future', $results);
+    }
+
+    public function test_scope_incomplete_excludes_completed(): void
+    {
+        $user = User::factory()->create();
+
+        Task::factory()->for($user)->create(['title' => 'Pending', 'status' => 'pending']);
+        Task::factory()->for($user)->create(['title' => 'In Progress', 'status' => 'in_progress']);
+        Task::factory()->completed()->for($user)->create(['title' => 'Done']);
+
+        $results = $user->tasks()->incomplete()->pluck('title');
+
+        $this->assertContains('Pending', $results);
+        $this->assertContains('In Progress', $results);
+        $this->assertNotContains('Done', $results);
+    }
+
+    public function test_scope_search_matches_title_and_description(): void
+    {
+        $user = User::factory()->create();
+
+        Task::factory()->for($user)->create(['title' => 'Buy milk', 'description' => 'From the store']);
+        Task::factory()->for($user)->create(['title' => 'Write code', 'description' => 'Buy some coffee']);
+        Task::factory()->for($user)->create(['title' => 'Exercise', 'description' => 'Go for a run']);
+
+        $results = $user->tasks()->search('buy')->pluck('title');
+
+        $this->assertContains('Buy milk', $results);
+        $this->assertContains('Write code', $results);
+        $this->assertNotContains('Exercise', $results);
+    }
+
+    // ---------------------------------------------------------------
+    // Schedule Status
+    // ---------------------------------------------------------------
+
+    public function test_schedule_status_pending(): void
+    {
+        $task = Task::factory()->create([
+            'status' => 'pending',
+            'due_date' => now()->addDays(5)->format('Y-m-d'),
+        ]);
+
+        $this->assertEquals('pending', $task->scheduleStatus());
+        $this->assertEquals('Pending', $task->scheduleStatusLabel());
+    }
+
+    public function test_schedule_status_missed(): void
+    {
+        $task = Task::factory()->overdue()->create();
+
+        $this->assertEquals('missed', $task->scheduleStatus());
+        $this->assertEquals('Missed', $task->scheduleStatusLabel());
+    }
+
+    public function test_schedule_status_completed_on_time(): void
+    {
+        $task = Task::factory()->completed()->create();
+
+        $this->assertEquals('completed_on_time', $task->scheduleStatus());
+        $this->assertEquals('On Time', $task->scheduleStatusLabel());
+    }
+
+    public function test_schedule_status_completed_late(): void
+    {
+        $task = Task::factory()->completedLate()->create();
+
+        $this->assertEquals('completed_late', $task->scheduleStatus());
+        $this->assertEquals('Completed Late', $task->scheduleStatusLabel());
+    }
+
+    // ---------------------------------------------------------------
+    // Index: Estimated Time Column
+    // ---------------------------------------------------------------
+
+    public function test_index_shows_estimated_time(): void
+    {
+        $user = User::factory()->create();
+        Task::factory()->withEstimate(60)->for($user)->create(['title' => 'Hour Task']);
+
+        $response = $this->actingAs($user)->get(route('tasks.index'));
+
+        $response->assertOk();
+        $response->assertSeeText('1h');
+    }
+
+    public function test_index_shows_dash_for_no_estimate(): void
+    {
+        $user = User::factory()->create();
+        Task::factory()->for($user)->create(['estimated_minutes' => null]);
+
+        $response = $this->actingAs($user)->get(route('tasks.index'));
+
+        $response->assertOk();
+    }
+
+    // ---------------------------------------------------------------
+    // Edit form shows estimate
+    // ---------------------------------------------------------------
+
+    public function test_edit_form_shows_estimated_minutes(): void
+    {
+        $user = User::factory()->create();
+        $task = Task::factory()->withEstimate(45)->for($user)->create();
+
+        $response = $this->actingAs($user)->get(route('tasks.edit', $task));
+
+        $response->assertOk();
+        $response->assertSee('Estimated Time');
+        $response->assertSee('45');
+    }
+
+    public function test_create_form_shows_estimate_field(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('tasks.create'));
+
+        $response->assertOk();
+        $response->assertSee('data-test="task-estimate-input"', false);
     }
 }

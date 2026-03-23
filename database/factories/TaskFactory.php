@@ -9,15 +9,15 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 /**
  * Factory for generating {@see Task} model instances in tests and seeders.
  *
+ * The default state creates a non-recurring task with a random status,
+ * priority, and due date within the next 30 days.
+ *
  * @extends Factory<Task>
  */
 class TaskFactory extends Factory
 {
     /**
      * Define the model's default state.
-     *
-     * Creates a pending or in-progress task with a random priority and
-     * a due date within the next 30 days.
      *
      * @return array<string, mixed>
      */
@@ -32,27 +32,24 @@ class TaskFactory extends Factory
             'due_date' => fake()->dateTimeBetween('now', '+30 days')->format('Y-m-d'),
             'is_recurring_daily' => false,
             'recurring_times' => null,
+            'estimated_minutes' => fake()->optional(0.5)->numberBetween(5, 240),
         ];
     }
 
-    /**
-     * Indicate the task is completed (on time — due date in the future).
-     */
+    /** Create a completed task (on time — due date in the future). */
     public function completed(): static
     {
-        return $this->state(fn (array $attributes): array => [
+        return $this->state(fn (): array => [
             'status' => 'completed',
             'due_date' => fake()->dateTimeBetween('+1 day', '+30 days')->format('Y-m-d'),
             'completed_at' => now(),
         ]);
     }
 
-    /**
-     * Indicate the task was completed late (after the due date passed).
-     */
+    /** Create a task that was completed after its due date. */
     public function completedLate(): static
     {
-        return $this->state(function (array $attributes): array {
+        return $this->state(function (): array {
             $dueDate = fake()->dateTimeBetween('-30 days', '-3 days');
 
             return [
@@ -66,34 +63,26 @@ class TaskFactory extends Factory
         });
     }
 
-    /**
-     * Indicate the task has high priority.
-     */
+    /** Create a high-priority task. */
     public function highPriority(): static
     {
-        return $this->state(fn (array $attributes): array => [
-            'priority' => 'high',
-        ]);
+        return $this->state(fn (): array => ['priority' => 'high']);
     }
 
-    /**
-     * Indicate the task is urgent.
-     */
+    /** Create an urgent-priority task. */
     public function urgent(): static
     {
-        return $this->state(fn (array $attributes): array => [
-            'priority' => 'urgent',
-        ]);
+        return $this->state(fn (): array => ['priority' => 'urgent']);
     }
 
     /**
-     * Indicate the task is a recurring daily task.
+     * Create a recurring daily task with two random time slots.
      *
      * Clears the due date and forces the status to "pending".
      */
     public function recurringDaily(): static
     {
-        return $this->state(function (array $attributes): array {
+        return $this->state(function (): array {
             $first = sprintf('%02d:%02d', fake()->numberBetween(6, 11), fake()->numberBetween(0, 59));
             $second = sprintf('%02d:%02d', fake()->numberBetween(12, 22), fake()->numberBetween(0, 59));
 
@@ -106,26 +95,28 @@ class TaskFactory extends Factory
         });
     }
 
-    /**
-     * Indicate the task is overdue (past due date, still pending).
-     */
+    /** Create an overdue task (past due date, still pending). */
     public function overdue(): static
     {
-        return $this->state(fn (array $attributes): array => [
+        return $this->state(fn (): array => [
             'due_date' => fake()->dateTimeBetween('-30 days', '-1 day')->format('Y-m-d'),
             'status' => 'pending',
         ]);
     }
 
-    /**
-     * Indicate the task is a "Someday / Maybe" item.
-     */
+    /** Create a "Someday / Maybe" item with no due date. */
     public function somedayMaybe(): static
     {
-        return $this->state(fn (array $attributes): array => [
+        return $this->state(fn (): array => [
             'category' => 'someday_maybe',
             'status' => 'pending',
             'due_date' => null,
         ]);
+    }
+
+    /** Create a task with a specific estimated duration in minutes. */
+    public function withEstimate(int $minutes): static
+    {
+        return $this->state(fn (): array => ['estimated_minutes' => $minutes]);
     }
 }

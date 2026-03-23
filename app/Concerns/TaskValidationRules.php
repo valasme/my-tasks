@@ -2,23 +2,28 @@
 
 namespace App\Concerns;
 
+use App\Http\Requests\StoreTaskRequest;
+use App\Http\Requests\UpdateTaskRequest;
 use App\Models\Task;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Validation\Rule;
 
 /**
- * Shared validation rules, preparation logic, and custom messages for task form requests.
+ * Shared validation rules, data preparation, and error messages for task requests.
  *
  * Used by both {@see StoreTaskRequest} and
  * {@see UpdateTaskRequest} to keep validation DRY.
+ *
+ * **Data preparation rules:**
+ * - Recurring-daily tasks: due date is cleared and status is forced to "pending".
+ * - Non-recurring tasks: recurring_times is cleared regardless of user input.
  */
 trait TaskValidationRules
 {
     /**
      * Prepare the data for validation.
      *
-     * When the task is marked as recurring daily, the due date is cleared
-     * and the status is forced to "pending" regardless of user input.
+     * Ensures mutual exclusivity between recurring-daily and due-date fields.
      */
     protected function prepareForValidation(): void
     {
@@ -50,17 +55,16 @@ trait TaskValidationRules
             'status' => ['required', 'string', Rule::in(Task::STATUSES)],
             'priority' => ['required', 'string', Rule::in(Task::PRIORITIES)],
             'due_date' => $this->dueDateRules(),
+
             'is_recurring_daily' => ['boolean'],
             'recurring_times' => [
                 $this->boolean('is_recurring_daily') ? 'required' : 'nullable',
                 'array',
                 'min:1',
+                'max:10',
             ],
-            'recurring_times.*' => [
-                'required',
-                'date_format:H:i',
-                'distinct',
-            ],
+            'recurring_times.*' => ['required', 'date_format:H:i', 'distinct'],
+
             'workspace_id' => [
                 'nullable',
                 'integer',
@@ -83,8 +87,8 @@ trait TaskValidationRules
     /**
      * Get the validation rules for the due_date field.
      *
-     * Defaults to requiring a date for non-recurring tasks.
-     * Override in subclasses to add additional constraints.
+     * Defaults to requiring a date when the task is not recurring.
+     * Override in subclasses to add constraints (e.g. `after_or_equal:today`).
      *
      * @return array<mixed>
      */
@@ -97,7 +101,7 @@ trait TaskValidationRules
     }
 
     /**
-     * Get custom messages for validator errors.
+     * Get custom error messages for task validation rules.
      *
      * @return array<string, string>
      */
@@ -108,8 +112,11 @@ trait TaskValidationRules
             'due_date.after_or_equal' => 'The due date must be today or a future date.',
             'recurring_times.required' => 'At least one time is required for recurring daily tasks.',
             'recurring_times.min' => 'At least one time is required for recurring daily tasks.',
+            'recurring_times.max' => 'You may specify up to 10 recurring times.',
             'recurring_times.*.date_format' => 'Each recurring time must be in HH:MM format.',
             'recurring_times.*.distinct' => 'Recurring times must be unique.',
+            'estimated_minutes.min' => 'Estimated time must be at least 1 minute.',
+            'estimated_minutes.max' => 'Estimated time must not exceed 480 minutes (8 hours).',
         ];
     }
 }

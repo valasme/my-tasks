@@ -32,8 +32,8 @@
 
         {{-- Task Details --}}
         <div class="grid w-full max-w-2xl gap-10">
-            {{-- Priority & Status --}}
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 sm:gap-8">
+            {{-- Priority, Status & Schedule Status --}}
+            <div class="grid grid-cols-1 gap-6 sm:grid-cols-3 sm:gap-8">
                 <div>
                     <flux:subheading class="mb-2">{{ __('Priority') }}</flux:subheading>
                     <span class="{{ $task->priorityBadgeClasses() }} inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium" data-test="task-priority">
@@ -51,6 +51,12 @@
                             {{ $task->statusLabel() }}
                         </span>
                     @endif
+                </div>
+                <div>
+                    <flux:subheading class="mb-2">{{ __('Schedule Status') }}</flux:subheading>
+                    <span class="{{ $task->scheduleStatusBadgeClasses() }} inline-flex items-center rounded-md px-2.5 py-1 text-xs font-medium" data-test="task-schedule-status">
+                        {{ $task->scheduleStatusLabel() }}
+                    </span>
                 </div>
             </div>
 
@@ -77,6 +83,16 @@
                     </p>
                 @else
                     <p class="text-sm text-zinc-400 dark:text-zinc-500">{{ __('No due date set') }}</p>
+                @endif
+            </div>
+
+            {{-- Estimated Time --}}
+            <div>
+                <flux:subheading class="mb-2">{{ __('Estimated Time') }}</flux:subheading>
+                @if ($task->formattedEstimate())
+                    <p class="text-sm text-zinc-700 dark:text-zinc-300" data-test="task-estimate">{{ $task->formattedEstimate() }}</p>
+                @else
+                    <p class="text-sm text-zinc-400 dark:text-zinc-500">{{ __('No estimate set') }}</p>
                 @endif
             </div>
 

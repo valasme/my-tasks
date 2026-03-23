@@ -165,7 +165,7 @@ class DueTaskTest extends TestCase
         $response = $this->actingAs($user)->get(route('due-tasks.index'));
 
         $response->assertOk();
-        $response->assertSee('text-red-600', false);
+        $response->assertSee('font-medium text-red-600 dark:text-red-400', false);
     }
 
     // ---------------------------------------------------------------

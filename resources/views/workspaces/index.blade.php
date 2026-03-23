@@ -16,30 +16,85 @@
         {{-- Flash Messages --}}
         @include('partials.notifications')
 
+        {{-- Filters --}}
+        <form method="GET" action="{{ route('workspaces.index') }}" class="space-y-4" data-test="workspace-filters">
+            {{-- Search --}}
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1">
+                    <flux:input
+                        name="search"
+                        type="search"
+                        :placeholder="__('Search workspaces...')"
+                        :value="$filters['search'] ?? ''"
+                        size="sm"
+                        icon="magnifying-glass"
+                        data-test="search-input"
+                        aria-label="{{ __('Search workspaces') }}"
+                    />
+                </div>
+                <div class="flex items-center gap-2">
+                    <flux:button class="cursor-pointer" type="submit" variant="primary" size="sm" data-test="apply-filters">
+                        {{ __('Filter') }}
+                    </flux:button>
+                    @if ($filters['search'] || $filters['has_tasks'] || $filters['sort'])
+                        <flux:button class="cursor-pointer" href="{{ route('workspaces.index') }}" variant="ghost" size="sm" data-test="clear-filters">
+                            {{ __('Clear') }}
+                        </flux:button>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Filter Dropdowns --}}
+            <div class="grid grid-cols-2 sm:grid-cols-2 gap-3">
+                {{-- Has Tasks --}}
+                <flux:select name="has_tasks" size="sm" aria-label="{{ __('Filter by task presence') }}" data-test="filter-has-tasks">
+                    <flux:select.option value="">{{ __('All Workspaces') }}</flux:select.option>
+                    <flux:select.option value="with_tasks" :selected="($filters['has_tasks'] ?? '') === 'with_tasks'">
+                        {{ __('With Tasks') }}
+                    </flux:select.option>
+                    <flux:select.option value="without_tasks" :selected="($filters['has_tasks'] ?? '') === 'without_tasks'">
+                        {{ __('Without Tasks') }}
+                    </flux:select.option>
+                </flux:select>
+
+                {{-- Sort --}}
+                <flux:select name="sort" size="sm" aria-label="{{ __('Sort workspaces') }}" data-test="sort-select">
+                    <flux:select.option value="">{{ __('Name A–Z') }}</flux:select.option>
+                    <flux:select.option value="name_desc" :selected="($filters['sort'] ?? '') === 'name_desc'">{{ __('Name Z–A') }}</flux:select.option>
+                    <flux:select.option value="newest" :selected="($filters['sort'] ?? '') === 'newest'">{{ __('Newest First') }}</flux:select.option>
+                    <flux:select.option value="oldest" :selected="($filters['sort'] ?? '') === 'oldest'">{{ __('Oldest First') }}</flux:select.option>
+                    <flux:select.option value="tasks_desc" :selected="($filters['sort'] ?? '') === 'tasks_desc'">{{ __('Most Tasks') }}</flux:select.option>
+                    <flux:select.option value="tasks_asc" :selected="($filters['sort'] ?? '') === 'tasks_asc'">{{ __('Fewest Tasks') }}</flux:select.option>
+                </flux:select>
+            </div>
+        </form>
+
         {{-- Workspace Table --}}
         <div>
-            <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <flux:heading size="lg">{{ __('All Workspaces') }}</flux:heading>
-                <div class="w-full sm:w-48">
-                    <flux:select size="sm" aria-label="{{ __('Sort workspaces') }}" data-test="sort-select" onchange="window.location.href=this.value">
-                        <flux:select.option value="{{ route('workspaces.index') }}" :selected="!$sort">
-                            {{ __('Name A–Z') }}
-                        </flux:select.option>
-                        <flux:select.option value="{{ route('workspaces.index', ['sort' => 'name_desc']) }}" :selected="$sort === 'name_desc'">
-                            {{ __('Name Z–A') }}
-                        </flux:select.option>
-                    </flux:select>
-                </div>
+            <div class="mb-4 flex items-center justify-between">
+                <flux:heading size="lg">
+                    {{ __('All Workspaces') }}
+                    <span class="ml-1 text-sm font-normal text-zinc-500 dark:text-zinc-400">({{ $workspaces->total() }})</span>
+                </flux:heading>
             </div>
 
             @if ($workspaces->isEmpty())
                 <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 py-16 dark:border-zinc-600">
                     <flux:icon name="rectangle-group" class="mb-4 size-12 text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
-                    <flux:heading size="lg" class="mb-1">{{ __('No workspaces yet') }}</flux:heading>
-                    <flux:subheading class="mb-4">{{ __('Create your first workspace to get started.') }}</flux:subheading>
-                    <flux:button class="cursor-pointer" aria-label="{{ __('Create New Workspace') }}" href="{{ route('workspaces.create') }}" icon="plus" variant="primary" size="sm">
-                        {{ __('New Workspace') }}
-                    </flux:button>
+
+                    @if ($filters['search'] || $filters['has_tasks'])
+                        <flux:heading size="lg" class="mb-1">{{ __('No matching workspaces') }}</flux:heading>
+                        <flux:subheading class="mb-4">{{ __('Try adjusting your filters or search terms.') }}</flux:subheading>
+                        <flux:button class="cursor-pointer" href="{{ route('workspaces.index') }}" variant="ghost" size="sm" icon="x-mark" data-test="clear-filters-empty">
+                            {{ __('Clear Filters') }}
+                        </flux:button>
+                    @else
+                        <flux:heading size="lg" class="mb-1">{{ __('No workspaces yet') }}</flux:heading>
+                        <flux:subheading class="mb-4">{{ __('Create your first workspace to get started.') }}</flux:subheading>
+                        <flux:button class="cursor-pointer" aria-label="{{ __('Create New Workspace') }}" href="{{ route('workspaces.create') }}" icon="plus" variant="primary" size="sm">
+                            {{ __('New Workspace') }}
+                        </flux:button>
+                    @endif
                 </div>
             @else
                 <flux:table>

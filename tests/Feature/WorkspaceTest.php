@@ -803,4 +803,297 @@ class WorkspaceTest extends TestCase
         $response->assertSee('data-test="task-workspace-select"', false);
         $response->assertSeeText('Marketing');
     }
+
+    // ---------------------------------------------------------------
+    // Search Filtering
+    // ---------------------------------------------------------------
+
+    public function test_index_search_filters_by_name(): void
+    {
+        $user = User::factory()->create();
+
+        Workspace::factory()->for($user)->create(['name' => 'Engineering']);
+        Workspace::factory()->for($user)->create(['name' => 'Marketing']);
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', ['search' => 'Engi']));
+
+        $response->assertOk();
+        $response->assertSeeText('Engineering');
+        $response->assertDontSeeText('Marketing');
+    }
+
+    public function test_index_search_is_case_insensitive(): void
+    {
+        $user = User::factory()->create();
+
+        Workspace::factory()->for($user)->create(['name' => 'Engineering']);
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', ['search' => 'engineering']));
+
+        $response->assertOk();
+        $response->assertSeeText('Engineering');
+    }
+
+    public function test_index_search_shows_no_matching_message(): void
+    {
+        $user = User::factory()->create();
+
+        Workspace::factory()->for($user)->create(['name' => 'Engineering']);
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', ['search' => 'nonexistent']));
+
+        $response->assertOk();
+        $response->assertSeeText('No matching workspaces');
+    }
+
+    public function test_index_empty_search_is_ignored(): void
+    {
+        $user = User::factory()->create();
+
+        Workspace::factory()->for($user)->create(['name' => 'Engineering']);
+        Workspace::factory()->for($user)->create(['name' => 'Marketing']);
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', ['search' => '']));
+
+        $response->assertOk();
+        $response->assertSeeText('Engineering');
+        $response->assertSeeText('Marketing');
+    }
+
+    public function test_index_search_does_not_leak_other_users_workspaces(): void
+    {
+        $user = User::factory()->create();
+        $otherUser = User::factory()->create();
+
+        Workspace::factory()->for($user)->create(['name' => 'My Engineering']);
+        Workspace::factory()->for($otherUser)->create(['name' => 'Other Engineering']);
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', ['search' => 'Engineering']));
+
+        $response->assertOk();
+        $response->assertSeeText('My Engineering');
+        $response->assertDontSeeText('Other Engineering');
+    }
+
+    // ---------------------------------------------------------------
+    // Has Tasks Filtering
+    // ---------------------------------------------------------------
+
+    public function test_index_filters_workspaces_with_tasks(): void
+    {
+        $user = User::factory()->create();
+
+        $workspaceWithTasks = Workspace::factory()->for($user)->create(['name' => 'Busy']);
+        Task::factory()->for($user)->create(['workspace_id' => $workspaceWithTasks->id]);
+
+        Workspace::factory()->for($user)->create(['name' => 'Empty']);
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', ['has_tasks' => 'with_tasks']));
+
+        $response->assertOk();
+        $response->assertSeeText('Busy');
+        $response->assertDontSeeText('Empty');
+    }
+
+    public function test_index_filters_workspaces_without_tasks(): void
+    {
+        $user = User::factory()->create();
+
+        $workspaceWithTasks = Workspace::factory()->for($user)->create(['name' => 'Busy']);
+        Task::factory()->for($user)->create(['workspace_id' => $workspaceWithTasks->id]);
+
+        Workspace::factory()->for($user)->create(['name' => 'Empty']);
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', ['has_tasks' => 'without_tasks']));
+
+        $response->assertOk();
+        $response->assertSeeText('Empty');
+        $response->assertDontSeeText('Busy');
+    }
+
+    public function test_index_invalid_has_tasks_filter_is_ignored(): void
+    {
+        $user = User::factory()->create();
+
+        Workspace::factory()->for($user)->create(['name' => 'Engineering']);
+        Workspace::factory()->for($user)->create(['name' => 'Marketing']);
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', ['has_tasks' => 'invalid']));
+
+        $response->assertOk();
+        $response->assertSeeText('Engineering');
+        $response->assertSeeText('Marketing');
+    }
+
+    public function test_index_has_tasks_filter_dropdown_is_visible(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('workspaces.index'));
+
+        $response->assertOk();
+        $response->assertSee('data-test="filter-has-tasks"', false);
+    }
+
+    // ---------------------------------------------------------------
+    // Extended Sorting
+    // ---------------------------------------------------------------
+
+    public function test_index_sort_newest_first(): void
+    {
+        $user = User::factory()->create();
+
+        Workspace::factory()->for($user)->create(['name' => 'Old', 'created_at' => now()->subDays(5)]);
+        Workspace::factory()->for($user)->create(['name' => 'New', 'created_at' => now()]);
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', ['sort' => 'newest']));
+
+        $response->assertOk();
+        $response->assertSeeTextInOrder(['New', 'Old']);
+    }
+
+    public function test_index_sort_oldest_first(): void
+    {
+        $user = User::factory()->create();
+
+        Workspace::factory()->for($user)->create(['name' => 'Old', 'created_at' => now()->subDays(5)]);
+        Workspace::factory()->for($user)->create(['name' => 'New', 'created_at' => now()]);
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', ['sort' => 'oldest']));
+
+        $response->assertOk();
+        $response->assertSeeTextInOrder(['Old', 'New']);
+    }
+
+    public function test_index_sort_most_tasks_first(): void
+    {
+        $user = User::factory()->create();
+
+        $few = Workspace::factory()->for($user)->create(['name' => 'Few']);
+        Task::factory()->for($user)->create(['workspace_id' => $few->id]);
+
+        $many = Workspace::factory()->for($user)->create(['name' => 'Many']);
+        Task::factory()->count(5)->for($user)->create(['workspace_id' => $many->id]);
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', ['sort' => 'tasks_desc']));
+
+        $response->assertOk();
+        $response->assertSeeTextInOrder(['Many', 'Few']);
+    }
+
+    public function test_index_sort_fewest_tasks_first(): void
+    {
+        $user = User::factory()->create();
+
+        $few = Workspace::factory()->for($user)->create(['name' => 'Few']);
+        Task::factory()->for($user)->create(['workspace_id' => $few->id]);
+
+        $many = Workspace::factory()->for($user)->create(['name' => 'Many']);
+        Task::factory()->count(5)->for($user)->create(['workspace_id' => $many->id]);
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', ['sort' => 'tasks_asc']));
+
+        $response->assertOk();
+        $response->assertSeeTextInOrder(['Few', 'Many']);
+    }
+
+    // ---------------------------------------------------------------
+    // Combined Filters
+    // ---------------------------------------------------------------
+
+    public function test_index_search_and_has_tasks_combined(): void
+    {
+        $user = User::factory()->create();
+
+        $match = Workspace::factory()->for($user)->create(['name' => 'Engineering Team']);
+        Task::factory()->for($user)->create(['workspace_id' => $match->id]);
+
+        Workspace::factory()->for($user)->create(['name' => 'Engineering Docs']);
+        Workspace::factory()->for($user)->create(['name' => 'Marketing']);
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', [
+            'search' => 'Engineering',
+            'has_tasks' => 'with_tasks',
+        ]));
+
+        $response->assertOk();
+        $response->assertSeeText('Engineering Team');
+        $response->assertDontSeeText('Engineering Docs');
+        $response->assertDontSeeText('Marketing');
+    }
+
+    public function test_index_filters_preserve_query_string(): void
+    {
+        $user = User::factory()->create();
+
+        Workspace::factory()->count(20)->for($user)->sequence(
+            fn ($sequence) => ['name' => 'Workspace '.str_pad((string) $sequence->index, 3, '0', STR_PAD_LEFT)],
+        )->create();
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', [
+            'search' => 'Workspace',
+            'sort' => 'name_desc',
+        ]));
+
+        $response->assertOk();
+        $response->assertSeeText('Showing');
+    }
+
+    // ---------------------------------------------------------------
+    // Filter UI Elements
+    // ---------------------------------------------------------------
+
+    public function test_index_search_input_is_visible(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('workspaces.index'));
+
+        $response->assertOk();
+        $response->assertSee('data-test="search-input"', false);
+    }
+
+    public function test_index_filter_form_is_visible(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('workspaces.index'));
+
+        $response->assertOk();
+        $response->assertSee('data-test="workspace-filters"', false);
+    }
+
+    public function test_index_clear_filters_shown_when_filters_active(): void
+    {
+        $user = User::factory()->create();
+
+        Workspace::factory()->for($user)->create();
+
+        $response = $this->actingAs($user)->get(route('workspaces.index', ['search' => 'test']));
+
+        $response->assertOk();
+        $response->assertSee('data-test="clear-filters"', false);
+    }
+
+    public function test_index_clear_filters_hidden_when_no_filters(): void
+    {
+        $user = User::factory()->create();
+
+        $response = $this->actingAs($user)->get(route('workspaces.index'));
+
+        $response->assertOk();
+        $response->assertDontSee('data-test="clear-filters"', false);
+    }
+
+    public function test_index_displays_total_count(): void
+    {
+        $user = User::factory()->create();
+
+        Workspace::factory()->count(3)->for($user)->create();
+
+        $response = $this->actingAs($user)->get(route('workspaces.index'));
+
+        $response->assertOk();
+        $response->assertSeeText('(3)');
+    }
 }

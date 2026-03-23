@@ -8,23 +8,82 @@
             </div>
         </div>
 
+        {{-- Flash Messages --}}
+        @include('partials.notifications')
+
+        {{-- Filters --}}
+        <form method="GET" action="{{ route('due-tasks.index') }}" class="space-y-4" data-test="task-filters">
+            {{-- Search --}}
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1">
+                    <flux:input
+                        name="search"
+                        type="search"
+                        :placeholder="__('Search tasks...')"
+                        :value="$filters['search'] ?? ''"
+                        size="sm"
+                        icon="magnifying-glass"
+                        data-test="search-input"
+                        aria-label="{{ __('Search tasks') }}"
+                    />
+                </div>
+                <div class="flex items-center gap-2">
+                    <flux:button class="cursor-pointer" type="submit" variant="primary" size="sm" data-test="apply-filters">
+                        {{ __('Filter') }}
+                    </flux:button>
+                    @if ($filters['search'] || $filters['status'] || $filters['priority'] || $filters['workspace'] || $filters['sort'])
+                        <flux:button class="cursor-pointer" href="{{ route('due-tasks.index') }}" variant="ghost" size="sm" data-test="clear-filters">
+                            {{ __('Clear') }}
+                        </flux:button>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Filter Dropdowns --}}
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {{-- Status --}}
+                <flux:select name="status" size="sm" aria-label="{{ __('Filter by status') }}" data-test="filter-status">
+                    <flux:select.option value="">{{ __('All Statuses') }}</flux:select.option>
+                    @foreach ($statuses as $status)
+                        <flux:select.option :value="$status" :selected="($filters['status'] ?? '') === $status">
+                            {{ str_replace('_', ' ', ucfirst($status)) }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+
+                {{-- Priority --}}
+                <flux:select name="priority" size="sm" aria-label="{{ __('Filter by priority') }}" data-test="filter-priority">
+                    <flux:select.option value="">{{ __('All Priorities') }}</flux:select.option>
+                    @foreach ($priorities as $priority)
+                        <flux:select.option :value="$priority" :selected="($filters['priority'] ?? '') === $priority">
+                            {{ ucfirst($priority) }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+
+                {{-- Workspace --}}
+                <flux:select name="workspace" size="sm" aria-label="{{ __('Filter by workspace') }}" data-test="filter-workspace">
+                    <flux:select.option value="">{{ __('All Workspaces') }}</flux:select.option>
+                    @foreach ($workspaces as $workspace)
+                        <flux:select.option :value="$workspace->id" :selected="($filters['workspace'] ?? '') == $workspace->id">
+                            {{ $workspace->name }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+
+                {{-- Sort --}}
+                <flux:select name="sort" size="sm" aria-label="{{ __('Sort tasks') }}" data-test="sort-select">
+                    <flux:select.option value="">{{ __('Due Date') }}</flux:select.option>
+                    <flux:select.option value="title_asc" :selected="($filters['sort'] ?? '') === 'title_asc'">{{ __('Title A-Z') }}</flux:select.option>
+                    <flux:select.option value="title_desc" :selected="($filters['sort'] ?? '') === 'title_desc'">{{ __('Title Z-A') }}</flux:select.option>
+                </flux:select>
+            </div>
+        </form>
+
         {{-- Incomplete Schedules --}}
         <div>
-            <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="mb-4 flex items-center justify-between">
                 <flux:heading size="lg">{{ __('Incomplete') }}</flux:heading>
-                <div class="w-full sm:w-48">
-                    <flux:select size="sm" aria-label="{{ __('Sort incomplete tasks') }}" data-test="sort-select" onchange="window.location.href=this.value">
-                        <flux:select.option value="{{ route('due-tasks.index') }}" :selected="!$sort">
-                            {{ __('Due Date') }}
-                        </flux:select.option>
-                        <flux:select.option value="{{ route('due-tasks.index', ['sort' => 'title_asc']) }}" :selected="$sort === 'title_asc'">
-                            {{ __('Title A-Z') }}
-                        </flux:select.option>
-                        <flux:select.option value="{{ route('due-tasks.index', ['sort' => 'title_desc']) }}" :selected="$sort === 'title_desc'">
-                            {{ __('Title Z-A') }}
-                        </flux:select.option>
-                    </flux:select>
-                </div>
             </div>
 
             @if ($incompleteSchedules->isEmpty())
@@ -58,9 +117,9 @@
                                 </flux:table.cell>
 
                                 <flux:table.cell class="hidden sm:table-cell">
-                                    <span class="text-sm {{ $task->isMissed() ? 'font-medium text-red-600' : 'text-zinc-600 dark:text-zinc-400' }}" data-test="task-due-date">
-                                        {{ $task->due_date->format('M d, Y') }}
-                                    </span>
+<span class="text-sm {{ $task->isMissed() ? 'font-medium text-red-600 dark:text-red-400' : 'text-zinc-600 dark:text-zinc-400' }}" data-test="task-due-date">
+    {{ $task->due_date->format('M d, Y') }}
+</span>
                                 </flux:table.cell>
 
                                 <flux:table.cell>

@@ -1,0 +1,25 @@
+{
+    "$schema": "https://opencode.ai/config.json",
+    "mcp": {
+        "laravel-boost": {
+            "type": "local",
+            "enabled": true,
+            "command": [
+                "php",
+                "artisan",
+                "boost:mcp"
+            ]
+        },
+        "herd": {
+            "type": "local",
+            "enabled": true,
+            "command": [
+                "php",
+                "C:/Users/User/.config/herd/bin/herd-mcp.phar"
+            ],
+            "environment": {
+                "SITE_PATH": "C:\\Users\\User\\Herd\\my-tasks"
+            }
+        }
+    }
+}

@@ -24,12 +24,24 @@ use Illuminate\Support\Carbon;
  * @property-read User $user
  * @property-read Task|null $task
  * @property-read Workspace|null $workspace
+ *
+ * @method static Builder|InboxItem search(string $term)
+ * @method static Builder|InboxItem applySort(?string $sortKey)
  */
 #[Fillable(['user_id', 'body', 'is_processed', 'task_id', 'workspace_id'])]
 class InboxItem extends Model
 {
     /** @use HasFactory<InboxItemFactory> */
     use HasFactory;
+
+    public const array FILTER_STATUSES = ['all', 'unprocessed', 'processed'];
+
+    public const array ALLOWED_SORTS = [
+        'newest' => ['created_at', 'desc'],
+        'oldest' => ['created_at', 'asc'],
+        'title_asc' => ['body', 'asc'],
+        'title_desc' => ['body', 'desc'],
+    ];
 
     /**
      * Get the attributes that should be cast.
@@ -81,5 +93,29 @@ class InboxItem extends Model
     public function scopeProcessed(Builder $query): Builder
     {
         return $query->where('is_processed', true);
+    }
+
+    /**
+     * Search inbox items by body content (case-insensitive).
+     */
+    public function scopeSearch(Builder $query, string $term): Builder
+    {
+        $term = trim($term);
+
+        return $query->where('body', 'like', "%{$term}%");
+    }
+
+    /**
+     * Apply a validated sort key to the query.
+     *
+     * Falls back to "newest" for unknown keys.
+     */
+    public function scopeApplySort(Builder $query, ?string $sortKey): Builder
+    {
+        $sortKey = $sortKey && array_key_exists($sortKey, self::ALLOWED_SORTS) ? $sortKey : 'newest';
+
+        [$column, $direction] = self::ALLOWED_SORTS[$sortKey];
+
+        return $query->orderBy($column, $direction);
     }
 }

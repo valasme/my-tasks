@@ -16,6 +16,57 @@
         {{-- Flash Messages --}}
         @include('partials.notifications')
 
+        {{-- Filters --}}
+        <form method="GET" action="{{ route('someday.index') }}" class="space-y-4">
+            {{-- Search --}}
+            <div class="flex flex-col sm:flex-row gap-3">
+                <div class="flex-1">
+                    <flux:input
+                        name="search"
+                        type="search"
+                        :placeholder="__('Search items...')"
+                        :value="$filters['search'] ?? ''"
+                        size="sm"
+                        icon="magnifying-glass"
+                        aria-label="{{ __('Search items') }}"
+                    />
+                </div>
+                <div class="flex items-center gap-2">
+                    <flux:button class="cursor-pointer" type="submit" variant="primary" size="sm">
+                        {{ __('Filter') }}
+                    </flux:button>
+                    @if ($filters['search'] || $filters['priority'] || $filters['sort'])
+                        <flux:button class="cursor-pointer" href="{{ route('someday.index') }}" variant="ghost" size="sm">
+                            {{ __('Clear') }}
+                        </flux:button>
+                    @endif
+                </div>
+            </div>
+
+            {{-- Filter Dropdowns --}}
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {{-- Priority --}}
+                <flux:select name="priority" size="sm" aria-label="{{ __('Filter by priority') }}">
+                    <flux:select.option value="">{{ __('All Priorities') }}</flux:select.option>
+                    @foreach ($priorities as $priority)
+                        <flux:select.option :value="$priority" :selected="($filters['priority'] ?? '') === $priority">
+                            {{ ucfirst($priority) }}
+                        </flux:select.option>
+                    @endforeach
+                </flux:select>
+
+                {{-- Sort --}}
+                <flux:select name="sort" size="sm" aria-label="{{ __('Sort items') }}">
+                    <flux:select.option value="">{{ __('Newest First') }}</flux:select.option>
+                    <flux:select.option value="oldest" :selected="($filters['sort'] ?? '') === 'oldest'">{{ __('Oldest First') }}</flux:select.option>
+                    <flux:select.option value="title_asc" :selected="($filters['sort'] ?? '') === 'title_asc'">{{ __('Title A-Z') }}</flux:select.option>
+                    <flux:select.option value="title_desc" :selected="($filters['sort'] ?? '') === 'title_desc'">{{ __('Title Z-A') }}</flux:select.option>
+                    <flux:select.option value="priority_desc" :selected="($filters['sort'] ?? '') === 'priority_desc'">{{ __('Priority (High-Low)') }}</flux:select.option>
+                    <flux:select.option value="priority_asc" :selected="($filters['sort'] ?? '') === 'priority_asc'">{{ __('Priority (Low-High)') }}</flux:select.option>
+                </flux:select>
+            </div>
+        </form>
+
         {{-- Items --}}
         @if ($tasks->isEmpty())
             <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 py-16 dark:border-zinc-600">

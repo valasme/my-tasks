@@ -79,7 +79,7 @@
             </div>
 
             @if ($workspaces->isEmpty())
-                <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 py-16 dark:border-zinc-600">
+                <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 py-16 dark:border-zinc-600" role="status">
                     <flux:icon name="rectangle-group" class="mb-4 size-12 text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
 
                     @if ($filters['search'] || $filters['has_tasks'])
@@ -108,7 +108,7 @@
                         @foreach ($workspaces as $workspace)
                             <flux:table.row>
                                 <flux:table.cell class="font-medium">
-                                    <a href="{{ route('workspaces.show', $workspace) }}" class="hover:underline" data-test="workspace-name" aria-label="{{ __('View Workspace') }}">
+                                    <a href="{{ route('workspaces.show', $workspace) }}" class="hover:underline" data-test="workspace-name" aria-label="{{ __('View Workspace: :name', ['name' => $workspace->name]) }}">
                                         {{ $workspace->name }}
                                     </a>
                                 </flux:table.cell>
@@ -161,9 +161,9 @@
                 @endforeach
 
                 {{-- Pagination --}}
-                <div class="mt-6" data-test="pagination">
+                <nav class="mt-6" data-test="pagination" aria-label="{{ __('Pagination') }}">
                     {{ $workspaces->links() }}
-                </div>
+                </nav>
             @endif
         </div>
     </div>

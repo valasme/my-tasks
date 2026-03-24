@@ -28,7 +28,7 @@
             </div>
 
             <div class="flex items-center gap-3">
-                <flux:heading size="lg" data-test="current-date">{{ $currentDate->format('l, M d, Y') }}</flux:heading>
+                <flux:heading size="lg" data-test="current-date"><time datetime="{{ $currentDate->toIso8601String() }}">{{ $currentDate->format('l, M d, Y') }}</time></flux:heading>
                 @if ($isToday)
                     <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20 dark:bg-blue-900/30 dark:text-blue-400 dark:ring-blue-500/30">{{ __('Today') }}</span>
                 @endif
@@ -61,7 +61,7 @@
 
         {{-- Time Blocks for Selected Date --}}
         @if ($timeBlocks->isEmpty())
-            <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 py-16 dark:border-zinc-600" data-test="empty-day">
+            <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 py-16 dark:border-zinc-600" data-test="empty-day" role="status">
                 <flux:icon name="calendar" class="mb-4 size-12 text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
                 <flux:heading size="lg" class="mb-1">{{ __('No time blocks') }}</flux:heading>
                 <flux:subheading class="mb-4">{{ __('Plan time blocks for this day.') }}</flux:subheading>
@@ -70,32 +70,34 @@
                 </flux:button>
             </div>
         @else
-            <div class="space-y-3" data-test="day-blocks">
+            <ul class="space-y-3" data-test="day-blocks" role="list">
                 @foreach ($timeBlocks as $block)
-                    <div class="flex items-stretch gap-4 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
-                        <div class="flex flex-col items-center justify-center border-r border-zinc-200 pr-4 dark:border-zinc-700">
-                            <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ $block->formattedStartTime() }}</span>
-                            <span class="text-xs text-zinc-400">{{ __('to') }}</span>
-                            <span class="text-sm font-medium text-zinc-700 dark:text-zinc-300">{{ $block->formattedEndTime() }}</span>
+                    <li>
+                        <div class="flex items-stretch gap-4 rounded-xl border border-zinc-200 bg-white p-5 dark:border-zinc-700 dark:bg-zinc-900">
+                            <div class="flex flex-col items-center justify-center border-r border-zinc-200 pr-4 dark:border-zinc-700">
+                                <time class="text-sm font-medium text-zinc-700 dark:text-zinc-300" datetime="{{ $block->start_time }}">{{ $block->formattedStartTime() }}</time>
+                                <span class="text-xs text-zinc-400">{{ __('to') }}</span>
+                                <time class="text-sm font-medium text-zinc-700 dark:text-zinc-300" datetime="{{ $block->end_time }}">{{ $block->formattedEndTime() }}</time>
+                            </div>
+                            <div class="flex-1">
+                                <flux:heading size="sm">{{ $block->title }}</flux:heading>
+                                @if ($block->task)
+                                    <flux:subheading class="mt-1">{{ __('Task: :title', ['title' => $block->task->title]) }}</flux:subheading>
+                                @endif
+                                @if ($block->estimated_minutes)
+                                    <span class="mt-1 inline-flex items-center text-xs text-zinc-500">{{ $block->estimated_minutes }} min</span>
+                                @endif
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <flux:button class="cursor-pointer" href="{{ route('time-blocks.edit', $block) }}" size="sm" variant="ghost" icon="pencil" aria-label="{{ __('Edit :title', ['title' => $block->title]) }}">{{ __('Edit') }}</flux:button>
+                                <flux:modal.trigger :name="'delete-block-' . $block->id">
+                                    <flux:button class="cursor-pointer" size="sm" variant="ghost" icon="trash" aria-label="{{ __('Delete :title', ['title' => $block->title]) }}">{{ __('Delete') }}</flux:button>
+                                </flux:modal.trigger>
+                            </div>
                         </div>
-                        <div class="flex-1">
-                            <flux:heading size="sm">{{ $block->title }}</flux:heading>
-                            @if ($block->task)
-                                <flux:subheading class="mt-1">{{ __('Task: :title', ['title' => $block->task->title]) }}</flux:subheading>
-                            @endif
-                            @if ($block->estimated_minutes)
-                                <span class="mt-1 inline-flex items-center text-xs text-zinc-500">{{ $block->estimated_minutes }} min</span>
-                            @endif
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <flux:button class="cursor-pointer" href="{{ route('time-blocks.edit', $block) }}" size="sm" variant="ghost" icon="pencil">{{ __('Edit') }}</flux:button>
-                            <flux:modal.trigger :name="'delete-block-' . $block->id">
-                                <flux:button class="cursor-pointer" size="sm" variant="ghost" icon="trash">{{ __('Delete') }}</flux:button>
-                            </flux:modal.trigger>
-                        </div>
-                    </div>
+                    </li>
                 @endforeach
-            </div>
+            </ul>
 
             @foreach ($timeBlocks as $block)
                 <flux:modal :name="'delete-block-' . $block->id" class="max-w-sm">
@@ -133,7 +135,7 @@
             </div>
 
             @if ($allTimeBlocks->isEmpty())
-                <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 py-12 dark:border-zinc-600" data-test="empty-all-blocks">
+                <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 py-12 dark:border-zinc-600" data-test="empty-all-blocks" role="status">
                     <flux:icon name="calendar" class="mb-4 size-12 text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
                     <flux:heading size="lg" class="mb-1">{{ __('No time blocks yet') }}</flux:heading>
                     <flux:subheading>{{ __('Your time blocks will appear here.') }}</flux:subheading>
@@ -157,14 +159,14 @@
                                     </flux:table.cell>
 
                                     <flux:table.cell class="hidden sm:table-cell">
-                                        <a href="{{ route('time-blocks.index', ['date' => $block->date->format('Y-m-d')]) }}" class="text-sm text-blue-600 hover:underline dark:text-blue-400" data-test="block-date">
-                                            {{ $block->date->format('M d, Y') }}
+                                        <a href="{{ route('time-blocks.index', ['date' => $block->date->format('Y-m-d')]) }}" class="text-sm text-blue-600 hover:underline dark:text-blue-400" data-test="block-date" aria-label="{{ __('View blocks for :date', ['date' => $block->date->format('M d, Y')]) }}">
+                                            <time datetime="{{ $block->date->toIso8601String() }}">{{ $block->date->format('M d, Y') }}</time>
                                         </a>
                                     </flux:table.cell>
 
                                     <flux:table.cell class="hidden md:table-cell">
                                         <span class="text-sm text-zinc-600 dark:text-zinc-400">
-                                            {{ $block->formattedStartTime() }} &ndash; {{ $block->formattedEndTime() }}
+                                            <time datetime="{{ $block->start_time }}">{{ $block->formattedStartTime() }}</time> &ndash; <time datetime="{{ $block->end_time }}">{{ $block->formattedEndTime() }}</time>
                                         </span>
                                     </flux:table.cell>
 
@@ -191,9 +193,9 @@
 
                     {{-- Pagination --}}
                     @if ($allTimeBlocks->hasPages())
-                        <div class="mt-6" data-test="all-blocks-pagination">
+                        <nav class="mt-6" data-test="all-blocks-pagination" aria-label="{{ __('Pagination') }}">
                             {{ $allTimeBlocks->links() }}
-                        </div>
+                        </nav>
                     @endif
 
                     @foreach ($allTimeBlocks as $block)

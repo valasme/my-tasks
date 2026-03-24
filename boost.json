@@ -1,8 +1,15 @@
 {
     "agents": [
-        "opencode"
+        "opencode",
+        "amp",
+        "claude_code",
+        "codex",
+        "cursor",
+        "gemini",
+        "copilot",
+        "junie"
     ],
-    "herd_mcp": true,
+    "herd_mcp": false,
     "mcp": true,
     "nightwatch_mcp": false,
     "sail": false

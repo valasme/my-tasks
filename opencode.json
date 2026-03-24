@@ -9,17 +9,6 @@
                 "artisan",
                 "boost:mcp"
             ]
-        },
-        "herd": {
-            "type": "local",
-            "enabled": true,
-            "command": [
-                "php",
-                "C:/Users/User/.config/herd/bin/herd-mcp.phar"
-            ],
-            "environment": {
-                "SITE_PATH": "C:\\Users\\User\\Herd\\my-tasks"
-            }
         }
     }
 }

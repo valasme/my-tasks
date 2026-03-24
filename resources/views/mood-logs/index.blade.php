@@ -47,37 +47,41 @@
 
         {{-- Mood Logs --}}
         @if ($logs->isEmpty())
-            <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 py-16 dark:border-zinc-600">
+            <div class="flex flex-col items-center justify-center rounded-xl border border-dashed border-zinc-300 py-16 dark:border-zinc-600" role="status">
                 <flux:icon name="face-smile" class="mb-4 size-12 text-zinc-400 dark:text-zinc-500" aria-hidden="true" />
                 <flux:heading size="lg" class="mb-1">{{ __('No mood logs yet') }}</flux:heading>
                 <flux:subheading>{{ __('Start tracking your mood to see patterns.') }}</flux:subheading>
             </div>
         @else
-            <div class="space-y-3">
+            <ul class="space-y-3" role="list">
                 @foreach ($logs as $log)
-                    <div class="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4 dark:border-zinc-700 dark:bg-zinc-900">
-                        <div class="flex items-center gap-4">
-                            <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium {{ $log->moodBadgeClasses() }}">
-                                {{ $log->moodLabel() }}
-                            </span>
-                            <div>
-                                @if ($log->note)
-                                    <p class="text-sm text-zinc-700 dark:text-zinc-300">{{ $log->note }}</p>
-                                @endif
-                                @if ($log->task)
-                                    <p class="mt-0.5 text-xs text-zinc-400">{{ __('Task: :title', ['title' => $log->task->title]) }}</p>
-                                @endif
+                    <li>
+                        <div class="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4 dark:border-zinc-700 dark:bg-zinc-900">
+                            <div class="flex items-center gap-4">
+                                <span class="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium {{ $log->moodBadgeClasses() }}" aria-label="{{ $log->moodLabel() }}">
+                                    {{ $log->moodLabel() }}
+                                </span>
+                                <div>
+                                    @if ($log->note)
+                                        <p class="text-sm text-zinc-700 dark:text-zinc-300">{{ $log->note }}</p>
+                                    @endif
+                                    @if ($log->task)
+                                        <p class="mt-0.5 text-xs text-zinc-400">{{ __('Task: :title', ['title' => $log->task->title]) }}</p>
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <span class="text-xs text-zinc-400">
+                                    <time datetime="{{ $log->logged_at->toIso8601String() }}">{{ $log->logged_at->format('M d, g:i A') }}</time>
+                                </span>
+                                <flux:modal.trigger :name="'delete-mood-' . $log->id">
+                                    <flux:button class="cursor-pointer" size="sm" variant="ghost" icon="trash" aria-label="{{ __('Delete mood log from :date', ['date' => $log->logged_at->format('M d, g:i A')]) }}" />
+                                </flux:modal.trigger>
                             </div>
                         </div>
-                        <div class="flex items-center gap-3">
-                            <span class="text-xs text-zinc-400">{{ $log->logged_at->format('M d, g:i A') }}</span>
-                            <flux:modal.trigger :name="'delete-mood-' . $log->id">
-                                <flux:button class="cursor-pointer" size="sm" variant="ghost" icon="trash" />
-                            </flux:modal.trigger>
-                        </div>
-                    </div>
+                    </li>
                 @endforeach
-            </div>
+            </ul>
 
             @foreach ($logs as $log)
                 <flux:modal :name="'delete-mood-' . $log->id" class="max-w-sm">
@@ -100,7 +104,7 @@
                 </flux:modal>
             @endforeach
 
-            <div class="mt-4">{{ $logs->links() }}</div>
+            <nav class="mt-4" aria-label="{{ __('Pagination') }}">{{ $logs->links() }}</nav>
         @endif
     </div>
 </x-layouts::app>

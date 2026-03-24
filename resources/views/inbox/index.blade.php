@@ -26,21 +26,27 @@
         <form method="GET" action="{{ route('inbox.index') }}" class="space-y-4">
             {{-- Status Tabs --}}
             <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                <div class="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
+                <div role="tablist" aria-label="{{ __('Inbox status filter') }}" class="flex items-center gap-1 p-1 bg-zinc-100 dark:bg-zinc-800 rounded-lg">
                     <a href="{{ route('inbox.index', array_merge(request()->query(), ['status' => 'all', 'page' => null])) }}"
+                       role="tab"
+                       aria-selected="{{ $filters['status'] === 'all' ? 'true' : 'false' }}"
                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors {{ $filters['status'] === 'all' ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200' }}">
                         {{ __('All') }}
-                        <span class="ml-1 text-xs opacity-70">({{ $counts['unprocessed'] + $counts['processed'] }})</span>
+                        <span class="ml-1 text-xs opacity-70" aria-hidden="true">({{ $counts['unprocessed'] + $counts['processed'] }})</span>
                     </a>
                     <a href="{{ route('inbox.index', array_merge(request()->query(), ['status' => 'unprocessed', 'page' => null])) }}"
+                       role="tab"
+                       aria-selected="{{ $filters['status'] === 'unprocessed' ? 'true' : 'false' }}"
                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors {{ $filters['status'] === 'unprocessed' ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200' }}">
                         {{ __('Unprocessed') }}
-                        <span class="ml-1 text-xs opacity-70">({{ $counts['unprocessed'] }})</span>
+                        <span class="ml-1 text-xs opacity-70" aria-hidden="true">({{ $counts['unprocessed'] }})</span>
                     </a>
                     <a href="{{ route('inbox.index', array_merge(request()->query(), ['status' => 'processed', 'page' => null])) }}"
+                       role="tab"
+                       aria-selected="{{ $filters['status'] === 'processed' ? 'true' : 'false' }}"
                        class="inline-flex items-center px-3 py-1.5 text-sm font-medium rounded-md transition-colors {{ $filters['status'] === 'processed' ? 'bg-white dark:bg-zinc-700 shadow-sm text-zinc-900 dark:text-zinc-100' : 'text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-200' }}">
                         {{ __('Processed') }}
-                        <span class="ml-1 text-xs opacity-70">({{ $counts['processed'] }})</span>
+                        <span class="ml-1 text-xs opacity-70" aria-hidden="true">({{ $counts['processed'] }})</span>
                     </a>
                 </div>
 
@@ -129,9 +135,9 @@
                     @endif
                 </div>
             @else
-                <div class="mt-4 space-y-3">
+                <ul class="mt-4 space-y-3" role="list" aria-label="{{ __('Inbox items') }}">
                     @foreach ($items as $item)
-                        <div class="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4 dark:border-zinc-700 dark:bg-zinc-900">
+                        <li class="flex items-center justify-between rounded-xl border border-zinc-200 bg-white px-5 py-4 dark:border-zinc-700 dark:bg-zinc-900">
                             <div class="flex-1">
                                 <p class="text-sm font-medium text-zinc-800 dark:text-zinc-200">{{ $item->body }}</p>
                                 <p class="mt-1 flex items-center gap-2 text-xs text-zinc-500">
@@ -142,10 +148,10 @@
                                         </span>
                                     @endif
                                     @if ($item->is_processed && $item->task)
-                                        <span class="inline-flex items-center gap-1 rounded-md bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
-                                            <flux:icon name="check" class="size-3" />
-                                            {{ __('Converted to task') }}
-                                        </span>
+<span class="inline-flex items-center gap-1 rounded-md bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700 dark:bg-green-900 dark:text-green-300">
+                                             <flux:icon name="check" class="size-3" aria-hidden="true" />
+                                             {{ __('Converted to task') }}
+                                         </span>
                                     @endif
                                 </p>
                             </div>
@@ -153,16 +159,16 @@
                                 @if (!$item->is_processed)
                                     <form method="POST" action="{{ route('inbox.convert', $item) }}">
                                         @csrf
-                                        <flux:button class="cursor-pointer" type="submit" size="sm" variant="primary" icon="arrow-right">{{ __('To Task') }}</flux:button>
+                                        <flux:button class="cursor-pointer" type="submit" size="sm" variant="primary" icon="arrow-right" aria-label="{{ __('Convert to task: :body', ['body' => Str::limit($item->body, 50)]) }}">{{ __('To Task') }}</flux:button>
                                     </form>
                                 @endif
                                 <flux:modal.trigger :name="'delete-inbox-' . $item->id">
-                                    <flux:button class="cursor-pointer" size="sm" variant="ghost" icon="trash">{{ __('Delete') }}</flux:button>
+                                    <flux:button class="cursor-pointer" size="sm" variant="ghost" icon="trash" aria-label="{{ __('Delete item: :body', ['body' => Str::limit($item->body, 50)]) }}">{{ __('Delete') }}</flux:button>
                                 </flux:modal.trigger>
                             </div>
-                        </div>
+                        </li>
                     @endforeach
-                </div>
+                </ul>
 
                 @foreach ($items as $item)
                     <flux:modal :name="'delete-inbox-' . $item->id" class="max-w-sm">
@@ -185,7 +191,7 @@
                     </flux:modal>
                 @endforeach
 
-                <div class="mt-6">{{ $items->links() }}</div>
+                <nav class="mt-6" aria-label="{{ __('Inbox pagination') }}">{{ $items->links() }}</nav>
             @endif
         </div>
     </div>

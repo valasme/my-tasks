@@ -17,7 +17,7 @@
         @include('partials.notifications')
 
         {{-- Filters --}}
-        <form method="GET" action="{{ route('tasks.index') }}" class="space-y-4" data-test="task-filters">
+        <form method="GET" action="{{ route('tasks.index') }}" class="space-y-4" data-test="task-filters" role="search" aria-label="{{ __('Task filters') }}">
             {{-- Search --}}
             <div class="flex flex-col sm:flex-row gap-3">
                 <div class="flex-1">
@@ -118,14 +118,14 @@
                     @endif
                 </div>
             @else
-                <flux:table>
+                <flux:table aria-label="{{ __('Tasks list') }}">
                     <flux:table.columns>
-                        <flux:table.column>{{ __('Title') }}</flux:table.column>
-                        <flux:table.column class="hidden md:table-cell">{{ __('Priority') }}</flux:table.column>
-                        <flux:table.column class="hidden sm:table-cell">{{ __('Status') }}</flux:table.column>
-                        <flux:table.column class="hidden lg:table-cell">{{ __('Schedule') }}</flux:table.column>
-                        <flux:table.column class="hidden lg:table-cell">{{ __('Estimate') }}</flux:table.column>
-                        <flux:table.column align="end">{{ __('Actions') }}</flux:table.column>
+                        <flux:table.column scope="col">{{ __('Title') }}</flux:table.column>
+                        <flux:table.column scope="col" class="hidden md:table-cell">{{ __('Priority') }}</flux:table.column>
+                        <flux:table.column scope="col" class="hidden sm:table-cell">{{ __('Status') }}</flux:table.column>
+                        <flux:table.column scope="col" class="hidden lg:table-cell">{{ __('Schedule') }}</flux:table.column>
+                        <flux:table.column scope="col" class="hidden lg:table-cell">{{ __('Estimate') }}</flux:table.column>
+                        <flux:table.column align="end" scope="col">{{ __('Actions') }}</flux:table.column>
                     </flux:table.columns>
 
                     <flux:table.rows>
@@ -133,7 +133,7 @@
                             <flux:table.row>
                                 {{-- Title --}}
                                 <flux:table.cell class="font-medium">
-                                    <a href="{{ route('tasks.show', $task) }}" class="hover:underline" data-test="task-title" aria-label="{{ __('View Task') }}">
+                                    <a href="{{ route('tasks.show', $task) }}" class="hover:underline" data-test="task-title" aria-label="{{ __('View Task: :title', ['title' => $task->title]) }}">
                                         {{ $task->title }}
                                     </a>
                                 </flux:table.cell>

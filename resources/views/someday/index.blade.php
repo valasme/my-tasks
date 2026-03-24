@@ -127,7 +127,7 @@
                 </flux:modal>
             @endforeach
 
-            <nav class="mt-4" aria-label="{{ __('Pagination') }}">{{ $tasks->links() }}</nav>
+            <nav class="mt-4" aria-label="Pagination">{!! $tasks->links() !!}</nav>
         @endif
     </div>
 </x-layouts::app>

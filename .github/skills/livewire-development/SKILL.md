@@ -41,18 +41,18 @@ Use `php artisan livewire:convert create-post` to convert between single-file, m
 
 ### Choosing a Component Format
 
-Before creating a component, check `config/livewire.php` for directory overrides, which change where files are stored. Then, look at existing files in those directories (defaulting to `app/Livewire/` and `resources/views/livewire/`) to match the established convention.
+Before creating a component, check `config/livewire.php` for directory overrides, which change where files are stored. Then, look at existing files in those directories (defaulting to `app\Livewire/` and `resources/views/livewire/`) to match the established convention.
 
 ### Component Format Reference
 
 | Format | Flag | Class Path | View Path |
 |--------|------|------------|-----------|
 | Single-file (SFC) | default | — | `resources/views/livewire/create-post.blade.php` (PHP + Blade in one file) |
-| Multi-file (MFC) | `--mfc` | `app/Livewire/CreatePost.php` | `resources/views/livewire/create-post.blade.php` |
-| Class-based | `--class` | `app/Livewire/CreatePost.php` | `resources/views/livewire/create-post.blade.php` |
+| Multi-file (MFC) | `--mfc` | `app\Livewire/CreatePost.php` | `resources/views/livewire/create-post.blade.php` |
+| Class-based | `--class` | `app\Livewire/CreatePost.php` | `resources/views/livewire/create-post.blade.php` |
 | View-based | ⚡ prefix | — | `resources/views/livewire/create-post.blade.php` (Blade-only with functional state) |
 
-Namespaced components map to subdirectories: `make:livewire Posts/CreatePost` creates files at `app/Livewire/Posts/CreatePost.php` and `resources/views/livewire/posts/create-post.blade.php`.
+Namespaced components map to subdirectories: `make:livewire Posts/CreatePost` creates files at `app\Livewire/Posts/CreatePost.php` and `resources/views/livewire/posts/create-post.blade.php`.
 
 ### Single-File Component Example
 

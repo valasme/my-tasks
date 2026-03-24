@@ -210,8 +210,8 @@
                     </flux:table>
 
                     {{-- Pagination --}}
-                    <nav class="mt-6" data-test="pagination" aria-label="{{ __('Pagination') }}">
-                        {{ $completedSchedules->links() }}
+                    <nav class="mt-6" data-test="pagination" aria-label="Pagination">
+                        {!! $completedSchedules->links() !!}
                     </nav>
                 </div>
             @endif

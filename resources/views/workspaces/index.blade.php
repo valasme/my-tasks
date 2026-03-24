@@ -161,8 +161,8 @@
                 @endforeach
 
                 {{-- Pagination --}}
-                <nav class="mt-6" data-test="pagination" aria-label="{{ __('Pagination') }}">
-                    {{ $workspaces->links() }}
+                <nav class="mt-6" data-test="pagination" aria-label="Pagination">
+                    {!! $workspaces->links() !!}
                 </nav>
             @endif
         </div>

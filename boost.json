@@ -9,7 +9,7 @@
         "copilot",
         "junie"
     ],
-    "herd_mcp": false,
+    "herd_mcp": true,
     "mcp": true,
     "nightwatch_mcp": false,
     "sail": false

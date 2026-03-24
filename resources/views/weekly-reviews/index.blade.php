@@ -59,7 +59,7 @@
                 @endforeach
             </ul>
 
-            <nav class="mt-4" aria-label="{{ __('Pagination') }}">{{ $reviews->links() }}</nav>
+            <nav class="mt-4" aria-label="Pagination">{!! $reviews->links() !!}</nav>
         @endif
     </div>
 </x-layouts::app>

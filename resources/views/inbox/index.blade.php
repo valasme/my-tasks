@@ -191,7 +191,7 @@
                     </flux:modal>
                 @endforeach
 
-                <nav class="mt-6" aria-label="{{ __('Inbox pagination') }}">{{ $items->links() }}</nav>
+                <nav class="mt-6" aria-label="Inbox pagination">{!! $items->links() !!}</nav>
             @endif
         </div>
     </div>

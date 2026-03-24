@@ -193,8 +193,8 @@
 
                     {{-- Pagination --}}
                     @if ($allTimeBlocks->hasPages())
-                        <nav class="mt-6" data-test="all-blocks-pagination" aria-label="{{ __('Pagination') }}">
-                            {{ $allTimeBlocks->links() }}
+                        <nav class="mt-6" data-test="all-blocks-pagination" aria-label="Pagination">
+                            {!! $allTimeBlocks->links() !!}
                         </nav>
                     @endif
 

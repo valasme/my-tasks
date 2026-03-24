@@ -233,7 +233,7 @@
 
                 {{-- Pagination --}}
                 <div class="mt-6" data-test="pagination">
-                    {{ $tasks->links() }}
+                    {!! $tasks->links() !!}
                 </div>
             @endif
         </div>

@@ -6,6 +6,15 @@
                 "artisan",
                 "boost:mcp"
             ]
+        },
+        "herd": {
+            "command": "php",
+            "args": [
+                "C:/Users/Admin/.config/herd/bin/herd-mcp.phar"
+            ],
+            "env": {
+                "SITE_PATH": "C:\\Users\\Admin\\Herd\\my-tasks"
+            }
         }
     }
 }
